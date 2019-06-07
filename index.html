@@ -18,7 +18,9 @@
 		gl_Position = uPMatrix * transformedCoord;	
 		
 		//vColor= vec3(1.0,0.0,0.0);
-		vColor= aVertexPosition;
+		//vColor= aVertexPosition;
+		
+		vColor= vec3(1.0+10.0*aVertexPosition.z, 1.0-10.0*aVertexPosition.z, 0.0);
 	}
 </script>
 

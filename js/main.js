@@ -84,7 +84,9 @@ var gridData=(function generateGridData(gridSize){
 			vertices.push(jj/gridSize);
 			//vertices.push(Math.random());	//TODO maybe shouldn't have z. z might be used for other stuff though eg water depth.
 			
-			vertices.push(0.25*terrainHeightXY(ii & terrainSizeMinusOne,jj & terrainSizeMinusOne));
+			var height = terrainHeightXY(ii & terrainSizeMinusOne,jj & terrainSizeMinusOne);
+			
+			vertices.push(0.25*Math.max(-0.1,height));	//raise deep parts to "sea" level
 			//vertices.push(0.05*Math.sin(ii*0.1)*Math.sin(jj*0.1));
 			//vertices.push(0.03*Math.random());
 		}
