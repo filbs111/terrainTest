@@ -2,12 +2,45 @@
 
 <head>
 
-<title>SVG distortion tool</title>
+<title>WebGL Terrain Test</title>
+
+
+<script id="shader-simple-vs" type="x-shader/x-vertex">
+
+	attribute vec3 aVertexPosition;
+	//attribute vec3 aVertexNormal;
+	uniform mat4 uMVMatrix;
+	uniform mat4 uPMatrix;
+	varying vec3 vColor;
+	
+	void main(void) {
+		vec4 transformedCoord = uMVMatrix * vec4(aVertexPosition,1.0);	//todo use 4x3 mat?
+		gl_Position = uPMatrix * transformedCoord;	
+		
+		//vColor= vec3(1.0,0.0,0.0);
+		vColor= aVertexPosition;
+	}
+</script>
+
+<script id="shader-simple-fs" type="x-shader/x-fragment">
+	precision mediump float;
+	varying vec3 vColor;
+
+	void main(void){
+		//gl_FragColor=vec4(vec3(10.0*vColor.z + 0.1),1.0);
+		gl_FragColor=vec4(vColor, 1.0);
+	}
+</script>
+
 
 </head>
 <body>
 
 <canvas id="mycanvas"></canvas>
+<canvas id="myglcanvas"></canvas>
 
+<script type="text/javascript" src="lib/gl-matrix-min.js"></script>
+<script type="text/javascript" src="utils/webgl_utils.js"></script>
 <script type="text/javascript" src="js/main.js"></script>
+
 </html>

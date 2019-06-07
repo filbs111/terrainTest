@@ -1,7 +1,7 @@
 //naive/slow implementation of diamond square
 
-var terrainSize=256;	//expect will want something like 128x128. check that something larger faster to validate calculation at runtime. alternatively can load image. iff will generate at runtime, want something to do deterministic random numbers (Math.random() is not deterministic!!)
-var terrainSizeMinusOne=255;
+var terrainSize=64;	//expect will want something like 128x128. check that something larger faster to validate calculation at runtime. alternatively can load image. iff will generate at runtime, want something to do deterministic random numbers (Math.random() is not deterministic!!)
+var terrainSizeMinusOne=terrainSize-1;
 
 var terrainHeightData = new Array(terrainSize*terrainSize);
 
@@ -32,7 +32,7 @@ for (offset = terrainSize;offset>1;offset/=2){
 		}
 	}
 	
-	randomScale/=2;	//where should this go?
+	randomScale/=1.9;	//where should this go?
 }
 
 console.log("after computation: " + (Date.now()-startTime));
@@ -53,7 +53,6 @@ for (var ii=0;ii<terrainSize;ii++){
 }
 console.log("after drawing: " + (Date.now()-startTime));
 
-
 function randomNumber(){
 	return randomScale*(Math.random()-0.5);
 }
@@ -69,3 +68,151 @@ function terrainHeightXY(xx,yy){
 function xyindex(xx,yy){
 	return (xx & terrainSizeMinusOne) + terrainSize*(yy & terrainSizeMinusOne);
 }
+
+//this is a modified copy of data/gridData from 3sphere project
+
+var gridData=(function generateGridData(gridSize){
+	//TODO buffers should be include whether or not they are strip or triangle type. 
+	//initially just do triangles. strip more efficient. for large grid, towards 1 vertex per triangle, rather than 3. (though indexed, so cost quite small)
+
+	var vertices = [];
+	var indices = [];
+	//create vertices first. for 3-sphere grid, loops, so different (here have vertices on opposite sides (and 4 corners) that share z-position
+	for (var ii=0;ii<gridSize;ii++){
+		for (var jj=0;jj<gridSize;jj++){
+			vertices.push(ii/gridSize);			//TODO how to push multiple things onto an array? 
+			vertices.push(jj/gridSize);
+			//vertices.push(Math.random());	//TODO maybe shouldn't have z. z might be used for other stuff though eg water depth.
+			
+			vertices.push(0.25*terrainHeightXY(ii & terrainSizeMinusOne,jj & terrainSizeMinusOne));
+			//vertices.push(0.05*Math.sin(ii*0.1)*Math.sin(jj*0.1));
+			//vertices.push(0.03*Math.random());
+		}
+	}
+	//TODO strip data, but regular tris data easier.
+	var startIdx=0;
+	var nextRowStartIdx = gridSize;
+	for (var ii=0;ii<gridSize-1;ii++){	
+		console.log(startIdx);
+		console.log(nextRowStartIdx);
+		for (var jj=0;jj<gridSize-1;jj++){
+			indices.push(startIdx);
+			indices.push(nextRowStartIdx);
+			indices.push(nextRowStartIdx+1);
+			
+			indices.push(startIdx);
+			indices.push(nextRowStartIdx+1);
+			indices.push(startIdx+1);
+			
+			startIdx++;
+			nextRowStartIdx++;
+		}
+		startIdx+=1;
+		nextRowStartIdx+=1;
+	}
+	return {vertices:vertices, indices:indices};
+})(terrainSize);
+
+
+
+
+//gl terrain rendering. TODO break into files/IIFE
+//copied webgl_utils assumes canvas var is canvas. 
+
+var canvas = document.getElementById("myglcanvas");
+canvas.width = 800;
+canvas.height = 600;
+
+//TODO 
+//create buffers, shaders, initialise gl etc etc...
+
+function init(){
+	initGL();
+	
+	//check can clear colour
+	gl.clearColor.apply(gl,[1,1,0,1]);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+	
+	initShaders();
+	initBuffers();
+	
+	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+	mat4.perspective(60, gl.viewportWidth/gl.viewportHeight, 0.1,200.0,pMatrix);	//apparently 0.9.5, last param is matrix rather than 1st!! todo use newer???
+																	//also old one uses degs!
+	
+	gl.useProgram(shaderPrograms.simple);
+
+	prepBuffersForDrawing(terrainBuffer, shaderPrograms.simple);
+	
+    gl.enable(gl.DEPTH_TEST);
+	gl.enable(gl.CULL_FACE);
+
+	
+	requestAnimationFrame(drawScene);
+}
+
+var shaderPrograms={};
+function initShaders(){
+	shaderPrograms.simple = loadShader( "shader-simple-vs", "shader-simple-fs",{
+					attributes:["aVertexPosition"],
+					uniforms:["uMVMatrix","uPMatrix"]
+					});
+}
+var terrainBuffer={};
+function initBuffers(){
+	var bufferObj = terrainBuffer;
+	var sourceData = gridData;
+	
+	bufferObj.vertexPositionBuffer = gl.createBuffer();
+	bufferArrayData(bufferObj.vertexPositionBuffer, sourceData.vertices, 3);
+	bufferObj.vertexIndexBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferObj.vertexIndexBuffer);
+	//sourceData.indices = [].concat.apply([],sourceData.faces);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(sourceData.indices), gl.STATIC_DRAW); 	//note uint16 limits to 256*256 verts
+	bufferObj.vertexIndexBuffer.itemSize = 3;
+	bufferObj.vertexIndexBuffer.numItems = sourceData.indices.length;
+	
+	function bufferArrayData(buffer, arr, size){
+		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr), gl.STATIC_DRAW);
+		buffer.itemSize = size;
+		buffer.numItems = arr.length / size;
+		console.log("buffered. numitems: " + buffer.numItems);
+	}
+}
+
+function drawScene(frameTime){
+	requestAnimationFrame(drawScene);
+	drawObjectFromPreppedBuffers(terrainBuffer, shaderPrograms.simple);
+}
+
+function prepBuffersForDrawing(bufferObj, shaderProg){
+	gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
+    gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferObj.vertexIndexBuffer);
+}
+
+function drawObjectFromPreppedBuffers(bufferObj, shaderProg){
+	gl.uniformMatrix4fv(shaderProg.uniforms.uPMatrix, false, pMatrix);	//TODO not every frame.
+	//console.log((new Date()).getTime());
+	//gl.uniform1fv(shaderProg.uniforms.uTime, [10]);
+	gl.uniformMatrix4fv(shaderProg.uniforms.uMVMatrix, false, mvMatrix);
+	gl.drawElements(gl.TRIANGLES, bufferObj.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+}
+
+
+var mvMatrix = mat4.create();
+mat4.identity(mvMatrix);
+var pMatrix = mat4.create();
+mat4.identity(pMatrix);
+//mat4.translate(mvMatrix,vec3.fromArray([0,0,-10])); //glmatix expects own vector type
+
+mvMatrix[14]=-0.2;	//move back to look at thing (is this camera or thing position?)
+mvMatrix[13]=-0.1;
+mvMatrix[12]=0;
+
+mat4.rotateX(mvMatrix, -1.3);	//rads
+mat4.rotateZ(mvMatrix, 0.8);	//rads
+
+init();
