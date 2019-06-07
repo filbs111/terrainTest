@@ -1,6 +1,6 @@
 //naive/slow implementation of diamond square
 
-var terrainSize=64;	//expect will want something like 128x128. check that something larger faster to validate calculation at runtime. alternatively can load image. iff will generate at runtime, want something to do deterministic random numbers (Math.random() is not deterministic!!)
+var terrainSize=128;	//expect will want something like 128x128. check that something larger faster to validate calculation at runtime. alternatively can load image. iff will generate at runtime, want something to do deterministic random numbers (Math.random() is not deterministic!!)
 var terrainSizeMinusOne=terrainSize-1;
 
 var terrainHeightData = new Array(terrainSize*terrainSize);
@@ -32,7 +32,7 @@ for (offset = terrainSize;offset>1;offset/=2){
 		}
 	}
 	
-	randomScale/=1.9;	//where should this go?
+	randomScale/=2.2;	//where should this go?
 }
 
 console.log("after computation: " + (Date.now()-startTime));
@@ -76,21 +76,38 @@ var gridData=(function generateGridData(gridSize){
 	//initially just do triangles. strip more efficient. for large grid, towards 1 vertex per triangle, rather than 3. (though indexed, so cost quite small)
 
 	var vertices = [];
+	var grads = [];	//might be able to use 2d gradient instead of 3d normal. perhaps normal quicker to use in shader though.
 	var indices = [];
 	//create vertices first. for 3-sphere grid, loops, so different (here have vertices on opposite sides (and 4 corners) that share z-position
+	var vertex2dData=[];
+	var thisLine;
 	for (var ii=0;ii<gridSize;ii++){
+		thisLine = [];
+		vertex2dData.push(thisLine);
 		for (var jj=0;jj<gridSize;jj++){
 			vertices.push(ii/gridSize);			//TODO how to push multiple things onto an array? 
 			vertices.push(jj/gridSize);
 			//vertices.push(Math.random());	//TODO maybe shouldn't have z. z might be used for other stuff though eg water depth.
 			
 			var height = terrainHeightXY(ii & terrainSizeMinusOne,jj & terrainSizeMinusOne);
+			height = 0.15*Math.max(height,-0.1);	//raise deep parts to "sea" level
+			thisLine.push(height);
 			
-			vertices.push(0.25*Math.max(-0.1,height));	//raise deep parts to "sea" level
+			vertices.push(height);	
 			//vertices.push(0.05*Math.sin(ii*0.1)*Math.sin(jj*0.1));
 			//vertices.push(0.03*Math.random());
 		}
 	}
+	//console.log(vertex2dData);
+	//generate gradient/normal data.
+	for (var ii=0;ii<gridSize;ii++){
+		for (var jj=0;jj<gridSize;jj++){
+			grads.push(vertex2dData[(ii+1)&terrainSizeMinusOne][jj] - vertex2dData[(ii-1)&terrainSizeMinusOne][jj]);
+			grads.push(vertex2dData[ii][(jj+1)&terrainSizeMinusOne] - vertex2dData[ii][(jj-1)&terrainSizeMinusOne]);
+		}
+	}
+	//console.log(grads);
+	
 	//TODO strip data, but regular tris data easier.
 	var startIdx=0;
 	var nextRowStartIdx = gridSize;
@@ -112,10 +129,8 @@ var gridData=(function generateGridData(gridSize){
 		startIdx+=1;
 		nextRowStartIdx+=1;
 	}
-	return {vertices:vertices, indices:indices};
+	return {vertices:vertices, grads:grads, indices:indices};
 })(terrainSize);
-
-
 
 
 //gl terrain rendering. TODO break into files/IIFE
@@ -157,7 +172,7 @@ function init(){
 var shaderPrograms={};
 function initShaders(){
 	shaderPrograms.simple = loadShader( "shader-simple-vs", "shader-simple-fs",{
-					attributes:["aVertexPosition"],
+					attributes:["aVertexPosition", "aVertexGradient"],
 					uniforms:["uMVMatrix","uPMatrix"]
 					});
 }
@@ -168,6 +183,8 @@ function initBuffers(){
 	
 	bufferObj.vertexPositionBuffer = gl.createBuffer();
 	bufferArrayData(bufferObj.vertexPositionBuffer, sourceData.vertices, 3);
+	bufferObj.vertexGradientBuffer = gl.createBuffer();
+	bufferArrayData(bufferObj.vertexGradientBuffer, sourceData.grads, 2);
 	bufferObj.vertexIndexBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferObj.vertexIndexBuffer);
 	//sourceData.indices = [].concat.apply([],sourceData.faces);
@@ -192,6 +209,8 @@ function drawScene(frameTime){
 function prepBuffersForDrawing(bufferObj, shaderProg){
 	gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
     gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+	gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientBuffer);
+    gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 0, 0);
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferObj.vertexIndexBuffer);
 }
 
