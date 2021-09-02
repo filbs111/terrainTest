@@ -16,7 +16,7 @@ var VERTS_PER_DIVISION = (terrainSize+1)*(terrainSize/DIVISIONS);
 
 
 
-var createDiamondSquareTerrain = function(terrainSize){
+var createDiamondSquareTerrain = function(terrainSize, cb){
 
     var terrainHeightData = new Array(terrainSize*terrainSize);
 
@@ -55,7 +55,7 @@ var createDiamondSquareTerrain = function(terrainSize){
     //add a method onto array object. TODO terrain "class"?
     terrainHeightData.getxy = terrainHeightXY;
 
-    return terrainHeightData;
+    cb(terrainHeightData);
 
   
     function randomNumber(){
