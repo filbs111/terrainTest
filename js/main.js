@@ -1,52 +1,5 @@
-//naive/slow implementation of diamond square
 
-var terrainSize=512;	//expect will want something like 128x128. check that something larger faster to validate calculation at runtime. alternatively can load image. if will generate at runtime, want something to do deterministic random numbers (Math.random() is not deterministic!!)
-var terrainSizeMinusOne=terrainSize-1;
-
-var DIVISIONS=terrainSize*terrainSize/32768;	
-					//256+ (257*257 verts +) do in multiple parts to stay under 2^16 index limit
-					//currently, decause divisions must have containt integer number of terrain lines, and 
-					// all divisions equal, 
-					// terrainSize/ DIVISIONS must be int, so DIVISIONS must be a power of 2, at least
-					// ((terrainSize/256)^2 ) *2 . 
-					// TODO? switch to integer terrain lines size, allow drawing of remainder division (last division can be smaller)
-console.log("terrain divisions: " + DIVISIONS);
-
-var VERTS_PER_DIVISION = (terrainSize+1)*(terrainSize/DIVISIONS);
-
-var terrainHeightData = new Array(terrainSize*terrainSize);
-
-//initialise
-terrainHeightData[0] = 0;
-
-var randomScale=1;
-var startTime=Date.now();
-
-for (offset = terrainSize;offset>1;offset/=2){
-	//diamond step
-	var halfOffset = offset/2;
-	var count=0;
-	for (var ii=halfOffset;ii<terrainSize;ii+=offset){
-		for (var jj=halfOffset;jj<terrainSize;jj+=offset){
-			setTerrainHeightDataXY(ii,jj, (terrainHeightXY(ii+halfOffset,jj+halfOffset) + terrainHeightXY(ii+halfOffset,jj-halfOffset) + terrainHeightXY(ii-halfOffset,jj+halfOffset) + terrainHeightXY(ii-halfOffset,jj-halfOffset))/4 + randomNumber());
-			count++;
-		}
-	}
-	
-	console.log(count);
-	
-	//square step
-	for (var ii=halfOffset;ii<terrainSize;ii+=offset){
-		for (var jj=0;jj<terrainSize;jj+=offset){
-			setTerrainHeightDataXY(ii,jj, (terrainHeightXY(ii+halfOffset,jj) + terrainHeightXY(ii-halfOffset,jj) + terrainHeightXY(ii,jj+halfOffset) + terrainHeightXY(ii,jj-halfOffset))/4 + randomNumber());
-			setTerrainHeightDataXY(jj,ii, (terrainHeightXY(jj+halfOffset,ii) + terrainHeightXY(jj-halfOffset,ii) + terrainHeightXY(jj,ii+halfOffset) + terrainHeightXY(jj,ii-halfOffset))/4 + randomNumber());
-		}
-	}
-	
-	randomScale/=2.2;	//where should this go?
-}
-
-console.log("after computation: " + (Date.now()-startTime));
+var terrainHeightData = createDiamondSquareTerrain(terrainSize);
 
 //draw stuff to a canvas. acting on imagedata faster but fillrect quicker to code...
 var mycanvas = document.getElementById("mycanvas");
@@ -57,27 +10,10 @@ var ctx = mycanvas.getContext("2d");
 
 for (var ii=0;ii<terrainSize;ii++){
 	for (var jj=0;jj<terrainSize;jj++){
-		var colour = Math.floor(Math.min(255,Math.max(0,128+(400*terrainHeightXY(ii,jj)))));
+		var colour = Math.floor(Math.min(255,Math.max(0,128+(400*terrainHeightData.getxy(ii,jj)))));
 		ctx.fillStyle = "rgba("+colour+",0,"+(255-colour)+",1)";
 		ctx.fillRect(ii,jj,1,1);
 	}
-}
-console.log("after drawing: " + (Date.now()-startTime));
-
-function randomNumber(){
-	return randomScale*(Math.random()-0.5);
-}
-
-function setTerrainHeightDataXY(xx,yy,hh){
-	terrainHeightData[xyindex(xx,yy)]=hh;
-}
-
-function terrainHeightXY(xx,yy){
-	return terrainHeightData[xyindex(xx,yy)];
-}
-
-function xyindex(xx,yy){
-	return (xx & terrainSizeMinusOne) + terrainSize*(yy & terrainSizeMinusOne);
 }
 
 //this is a modified copy of data/gridData from 3sphere project
@@ -100,7 +36,7 @@ var gridData=(function generateGridData(gridSize){
 			vertices.push(jj/gridSize);
 			//vertices.push(Math.random());	//TODO maybe shouldn't have z. z might be used for other stuff though eg water depth.
 			
-			var height = terrainHeightXY(ii & terrainSizeMinusOne,jj & terrainSizeMinusOne);
+			var height = terrainHeightData.getxy(ii & terrainSizeMinusOne,jj & terrainSizeMinusOne);
 			height = 0.15*Math.max(height,-0.1);	//raise deep parts to "sea" level
 			thisLine.push(height);
 			
@@ -187,12 +123,13 @@ var terrainBuffer={};
 function initBuffers(){
 	var bufferObj = terrainBuffer;
 	var sourceData = gridData;
-	
+		
 	bufferObj.vertexPositionBuffer = gl.createBuffer();
 	bufferArrayData(bufferObj.vertexPositionBuffer, sourceData.vertices, 3);
 	bufferObj.vertexGradientBuffer = gl.createBuffer();
 	bufferArrayData(bufferObj.vertexGradientBuffer, sourceData.grads, 2);
 	bufferObj.vertexIndexBuffer = gl.createBuffer();
+
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferObj.vertexIndexBuffer);
 	//sourceData.indices = [].concat.apply([],sourceData.faces);
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(sourceData.indices), gl.STATIC_DRAW); 	//note uint16 limits to 256*256 verts
@@ -206,6 +143,7 @@ function initBuffers(){
 		buffer.numItems = arr.length / size;
 		console.log("buffered. numitems: " + buffer.numItems);
 	}
+
 }
 
 function drawScene(frameTime){
