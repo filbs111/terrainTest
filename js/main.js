@@ -171,6 +171,7 @@ function init(){
     gl.enable(gl.DEPTH_TEST);
 	gl.enable(gl.CULL_FACE);
 
+	stats.setup();
 	
 	requestAnimationFrame(drawScene);
 }
@@ -209,6 +210,10 @@ function initBuffers(){
 
 function drawScene(frameTime){
 	requestAnimationFrame(drawScene);
+
+	stats.get().end();
+	stats.get().begin();
+
 	drawTerrain();
 }
 
