@@ -1,7 +1,9 @@
 //naive/slow implementation of diamond square
 
-var terrainSize=128;	//expect will want something like 128x128. check that something larger faster to validate calculation at runtime. alternatively can load image. iff will generate at runtime, want something to do deterministic random numbers (Math.random() is not deterministic!!)
+var terrainSize=256;	//expect will want something like 128x128. check that something larger faster to validate calculation at runtime. alternatively can load image. if will generate at runtime, want something to do deterministic random numbers (Math.random() is not deterministic!!)
 var terrainSizeMinusOne=terrainSize-1;
+
+var DIVISIONS=2;	//256 do in 2 parts to stay under 2^16 index limit
 
 var terrainHeightData = new Array(terrainSize*terrainSize);
 
@@ -112,7 +114,8 @@ var gridData=(function generateGridData(gridSize){
 
 	var startIdx=0;
 	var nextRowStartIdx = gridSize+1;
-	for (var ii=0;ii<gridSize;ii++){
+
+	for (var ii=0;ii<gridSize/DIVISIONS;ii++){
 		indices.push(startIdx);
 		for (var jj=0;jj<=gridSize;jj++){
 			indices.push(startIdx++);
@@ -197,23 +200,33 @@ function initBuffers(){
 
 function drawScene(frameTime){
 	requestAnimationFrame(drawScene);
-	drawObjectFromPreppedBuffers(terrainBuffer, shaderPrograms.simple);
+	drawTerrain();
+}
+
+function drawTerrain(){
+	
+	// drawObjectFromPreppedBuffers(terrainBuffer, shaderPrograms.simple);
+	var shaderProg = shaderPrograms.simple;
+	var bufferObj = terrainBuffer;
+
+	gl.uniformMatrix4fv(shaderProg.uniforms.uPMatrix, false, pMatrix);
+	gl.uniformMatrix4fv(shaderProg.uniforms.uMVMatrix, false, mvMatrix);
+
+	for (var ii=0;ii<2;ii++){
+
+		//TODO interleaved single buffer to avoid bindbuffer calls?
+		gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
+		gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize , gl.FLOAT, false, 0, ii*12*257*128);
+		gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientBuffer);
+		gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 0, ii*8*257*128);
+	
+		gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+	}
+	
 }
 
 function prepBuffersForDrawing(bufferObj, shaderProg){
-	gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-	gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientBuffer);
-    gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 0, 0);
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferObj.vertexIndexBuffer);
-}
-
-function drawObjectFromPreppedBuffers(bufferObj, shaderProg){
-	gl.uniformMatrix4fv(shaderProg.uniforms.uPMatrix, false, pMatrix);	//TODO not every frame.
-	//console.log((new Date()).getTime());
-	//gl.uniform1fv(shaderProg.uniforms.uTime, [10]);
-	gl.uniformMatrix4fv(shaderProg.uniforms.uMVMatrix, false, mvMatrix);
-	gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 }
 
 
