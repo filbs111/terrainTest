@@ -74,3 +74,37 @@ var createDiamondSquareTerrain = function(terrainSize, cb){
         return terrainHeightData[xyindex(xx,yy)];
     }
 }
+
+var loadHeightmapTerrain = function(terrainSize, cb){
+
+    var terrainHeightData = new Array(terrainSize*terrainSize);
+
+    //add a method onto array object. TODO terrain "class"?
+    terrainHeightData.getxy = terrainHeightXY;
+
+    var oReq = new XMLHttpRequest();
+    oReq.open("GET", './heightmaps/try1024.r16', true); //16 bit heightmap.
+    oReq.responseType = "arraybuffer";
+
+
+    oReq.onload = function (oEvent) {
+        var arrayBuffer = oReq.response; // Note: not oReq.responseText
+        if (arrayBuffer) {
+            var sixteenBitArray = new Uint16Array(arrayBuffer);
+            for (var ii = 0; ii < sixteenBitArray.byteLength; ii++) {
+                terrainHeightData[ii] = 0.00001*sixteenBitArray[ii] - 0.3;
+            }
+
+            cb(terrainHeightData);
+        }
+    };
+    oReq.send(null);
+
+    function terrainHeightXY(xx,yy){
+        return terrainHeightData[xyindex(xx,yy)];
+    }
+
+    function xyindex(xx,yy){
+        return (xx & terrainSizeMinusOne) + terrainSize*(yy & terrainSizeMinusOne);
+    }
+}

@@ -95,8 +95,9 @@ function init(){
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 	initShaders();
-	createDiamondSquareTerrain(terrainSize, doUponTerrainInitialised);
-	
+	// createDiamondSquareTerrain(terrainSize, doUponTerrainInitialised);
+	loadHeightmapTerrain(terrainSize, doUponTerrainInitialised);
+
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 	mat4.perspective(60, gl.viewportWidth/gl.viewportHeight, 0.1,200.0,pMatrix);	//apparently 0.9.5, last param is matrix rather than 1st!! todo use newer???
 																	//also old one uses degs!
