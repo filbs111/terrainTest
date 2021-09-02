@@ -1,9 +1,18 @@
 //naive/slow implementation of diamond square
 
-var terrainSize=256;	//expect will want something like 128x128. check that something larger faster to validate calculation at runtime. alternatively can load image. if will generate at runtime, want something to do deterministic random numbers (Math.random() is not deterministic!!)
+var terrainSize=512;	//expect will want something like 128x128. check that something larger faster to validate calculation at runtime. alternatively can load image. if will generate at runtime, want something to do deterministic random numbers (Math.random() is not deterministic!!)
 var terrainSizeMinusOne=terrainSize-1;
 
-var DIVISIONS=2;	//256 do in 2 parts to stay under 2^16 index limit
+var DIVISIONS=terrainSize*terrainSize/32768;	
+					//256+ (257*257 verts +) do in multiple parts to stay under 2^16 index limit
+					//currently, decause divisions must have containt integer number of terrain lines, and 
+					// all divisions equal, 
+					// terrainSize/ DIVISIONS must be int, so DIVISIONS must be a power of 2, at least
+					// ((terrainSize/256)^2 ) *2 . 
+					// TODO? switch to integer terrain lines size, allow drawing of remainder division (last division can be smaller)
+console.log("terrain divisions: " + DIVISIONS);
+
+var VERTS_PER_DIVISION = (terrainSize+1)*(terrainSize/DIVISIONS);
 
 var terrainHeightData = new Array(terrainSize*terrainSize);
 
@@ -212,13 +221,13 @@ function drawTerrain(){
 	gl.uniformMatrix4fv(shaderProg.uniforms.uPMatrix, false, pMatrix);
 	gl.uniformMatrix4fv(shaderProg.uniforms.uMVMatrix, false, mvMatrix);
 
-	for (var ii=0;ii<2;ii++){
+	for (var ii=0;ii<DIVISIONS;ii++){
 
 		//TODO interleaved single buffer to avoid bindbuffer calls?
 		gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
-		gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize , gl.FLOAT, false, 0, ii*12*257*128);
+		gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize , gl.FLOAT, false, 0, ii*12*VERTS_PER_DIVISION);
 		gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientBuffer);
-		gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 0, ii*8*257*128);
+		gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 0, ii*8*VERTS_PER_DIVISION);
 	
 		gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 	}
