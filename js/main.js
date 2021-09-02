@@ -81,10 +81,10 @@ var gridData=(function generateGridData(gridSize){
 	//create vertices first. for 3-sphere grid, loops, so different (here have vertices on opposite sides (and 4 corners) that share z-position
 	var vertex2dData=[];
 	var thisLine;
-	for (var ii=0;ii<gridSize;ii++){
+	for (var ii=0;ii<=gridSize;ii++){
 		thisLine = [];
 		vertex2dData.push(thisLine);
-		for (var jj=0;jj<gridSize;jj++){
+		for (var jj=0;jj<=gridSize;jj++){
 			vertices.push(ii/gridSize);			//TODO how to push multiple things onto an array? 
 			vertices.push(jj/gridSize);
 			//vertices.push(Math.random());	//TODO maybe shouldn't have z. z might be used for other stuff though eg water depth.
@@ -100,35 +100,29 @@ var gridData=(function generateGridData(gridSize){
 	}
 	//console.log(vertex2dData);
 	//generate gradient/normal data.
-	for (var ii=0;ii<gridSize;ii++){
-		for (var jj=0;jj<gridSize;jj++){
+	for (var ii=0;ii<=gridSize;ii++){
+		for (var jj=0;jj<=gridSize;jj++){
 			grads.push(vertex2dData[(ii+1)&terrainSizeMinusOne][jj] - vertex2dData[(ii-1)&terrainSizeMinusOne][jj]);
 			grads.push(vertex2dData[ii][(jj+1)&terrainSizeMinusOne] - vertex2dData[ii][(jj-1)&terrainSizeMinusOne]);
 		}
 	}
 	//console.log(grads);
 	
-	//TODO strip data, but regular tris data easier.
+	//strip data
+
 	var startIdx=0;
-	var nextRowStartIdx = gridSize;
-	for (var ii=0;ii<gridSize-1;ii++){	
-		console.log(startIdx);
-		console.log(nextRowStartIdx);
-		for (var jj=0;jj<gridSize-1;jj++){
-			indices.push(startIdx);
-			indices.push(nextRowStartIdx);
-			indices.push(nextRowStartIdx+1);
-			
-			indices.push(startIdx);
-			indices.push(nextRowStartIdx+1);
-			indices.push(startIdx+1);
-			
-			startIdx++;
-			nextRowStartIdx++;
+	var nextRowStartIdx = gridSize+1;
+	for (var ii=0;ii<gridSize;ii++){
+		indices.push(startIdx);
+		for (var jj=0;jj<=gridSize;jj++){
+			indices.push(startIdx++);
+			indices.push(nextRowStartIdx++);
 		}
-		startIdx+=1;
-		nextRowStartIdx+=1;
+		indices.push(nextRowStartIdx-1);
 	}
+	indices.pop();
+	indices.shift();
+
 	return {vertices:vertices, grads:grads, indices:indices};
 })(terrainSize);
 
@@ -219,7 +213,7 @@ function drawObjectFromPreppedBuffers(bufferObj, shaderProg){
 	//console.log((new Date()).getTime());
 	//gl.uniform1fv(shaderProg.uniforms.uTime, [10]);
 	gl.uniformMatrix4fv(shaderProg.uniforms.uMVMatrix, false, mvMatrix);
-	gl.drawElements(gl.TRIANGLES, bufferObj.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+	gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 }
 
 
