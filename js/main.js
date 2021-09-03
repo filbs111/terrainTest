@@ -236,13 +236,22 @@ function drawTerrain(){
 
 	//diagonal blocks starting from corner
 	for (var ii=0;ii<16;ii++){
-		gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
-		gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize , gl.FLOAT, false, 12*downsizeAmount, ii*12*(downsizeAmount* (VERTS_PER_DIVISION + 32)));
-		gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientBuffer);
-		gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 8*downsizeAmount, ii*8*(downsizeAmount* (VERTS_PER_DIVISION + 32)));
-		gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems/32, gl.UNSIGNED_SHORT, 0);
+		drawBlock(shaderProg, bufferObj, downsizeAmount, ii, ii);
 	}
 }
+
+
+function drawBlock(shaderProg, bufferObj, downsizeAmount, xx, yy){
+	var shiftAmount = downsizeAmount*(xx*VERTS_PER_DIVISION + yy*32);
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
+	gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize , gl.FLOAT, false, 12*downsizeAmount, 12*shiftAmount);
+	gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientBuffer);
+	gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 8*downsizeAmount, 8*shiftAmount);
+	gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems/32, gl.UNSIGNED_SHORT, 0);
+}
+
+
 
 function prepBuffersForDrawing(bufferObj, shaderProg){
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferObj.vertexIndexBuffer);
