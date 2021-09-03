@@ -1,3 +1,32 @@
+//quadtree stuff
+var scene = (
+    function(){
+        var viewpointPos = {x:-100, y:0};
+        var quadtree;
+
+        document.getElementById("mycanvasoverlay").addEventListener('mousedown', (e) => {
+            
+			var rect = e.target.getBoundingClientRect();
+			viewpointPos.x = e.clientX - rect.left; //x position within the element.
+			viewpointPos.y = e.clientY - rect.top;
+
+            quadtree = calculateQuadtree(viewpointPos, {xpos:0, ypos:0, size:terrainSize});
+            console.log(quadtree);
+        });
+
+        return {
+            getPos: function(){
+                return viewpointPos;
+            },
+            getQuadtree: function(){
+                return quadtree;
+            }
+        }
+    }
+)();
+
+var overlayctx;
+
 var doUponTerrainInitialised = function(terrainHeightData){
 
 	//draw stuff to a canvas. acting on imagedata faster but fillrect quicker to code...
@@ -115,6 +144,12 @@ function init(){
 
 	stats.setup();
 	
+	var overlaycanvas = document.getElementById("mycanvasoverlay");
+	overlaycanvas.width = terrainSize;
+	overlaycanvas.height = terrainSize;
+	overlayctx = overlaycanvas.getContext("2d");
+	overlayctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+
 	requestAnimationFrame(drawScene);
 }
 
@@ -158,6 +193,10 @@ function drawScene(frameTime){
 
 	stats.get().end();
 	stats.get().begin();
+
+	overlayctx.clearRect(0, 0, terrainSize, terrainSize);
+
+	renderQuadtree(overlayctx, scene.getQuadtree());
 
 	drawTerrain();
 }

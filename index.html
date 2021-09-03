@@ -4,6 +4,7 @@
 
 <title>WebGL Terrain Test</title>
 
+<link rel='stylesheet' type='text/css' media='screen' href='main.css'>
 
 <script id="shader-simple-vs" type="x-shader/x-vertex">
 
@@ -40,8 +41,15 @@
 </head>
 <body>
 
-<canvas id="mycanvas"></canvas>
-<canvas id="myglcanvas"></canvas>
+
+<div id="container">
+	<canvas class="canvas" id="mycanvas"></canvas>
+	<canvas class="canvas" id="mycanvasoverlay"></canvas>
+</div>
+<div id="container2">
+	<canvas id="myglcanvas"></canvas>
+</div>
+
 <p>half scale?</p><input type="checkbox" id="halfscale">
 
 <script type="text/javascript" src="lib/stats.min.js"></script>
@@ -49,6 +57,7 @@
 <script type="text/javascript" src="lib/gl-matrix-min.js"></script>
 <script type="text/javascript" src="utils/webgl_utils.js"></script>
 <script type="text/javascript" src="utils/terrain_utils.js"></script>
+<script type="text/javascript" src="utils/quadtree_util.js"></script>
 <script type="text/javascript" src="js/main.js"></script>
 
 </html>

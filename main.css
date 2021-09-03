@@ -1,0 +1,9 @@
+body {
+    margin: 0px;
+}
+
+#mycanvas { position: relative; top: 0; left: 0; }
+#mycanvasoverlay { position: absolute; top: 0; left: 0; }
+
+/* 1st (terrain 2d map) is relative so that (i guess) gl canvas below is affected by something being above.
+the 2nd (terrain overlay) is absolute so it is NOT affected by 1st canvas, and so lies on top of it. */
