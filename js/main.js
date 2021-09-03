@@ -173,17 +173,26 @@ function drawTerrain(){
 	gl.uniformMatrix4fv(shaderProg.uniforms.uPMatrix, false, pMatrix);
 	gl.uniformMatrix4fv(shaderProg.uniforms.uMVMatrix, false, mvMatrix);
 
-	for (var ii=0;ii<DIVISIONS;ii++){
-
-		//TODO interleaved single buffer to avoid bindbuffer calls?
-		gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
-		gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize , gl.FLOAT, false, 0, ii*12*VERTS_PER_DIVISION);
-		gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientBuffer);
-		gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 0, ii*8*VERTS_PER_DIVISION);
-	
-		gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+	if (!document.getElementById("halfscale").checked){
+		for (var ii=0;ii<DIVISIONS;ii++){
+			//TODO interleaved single buffer to avoid bindbuffer calls?
+			gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
+			gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize , gl.FLOAT, false, 0, ii*12*VERTS_PER_DIVISION);
+			gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientBuffer);
+			gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 0, ii*8*VERTS_PER_DIVISION);
+		
+			gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+		}
+	}else{
+		for (var ii=0;ii<DIVISIONS/2;ii++){
+			gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
+			gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize , gl.FLOAT, false, 24, ii*24*VERTS_PER_DIVISION);
+			gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientBuffer);
+			gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 16, ii*16*VERTS_PER_DIVISION);
+			gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems/2, gl.UNSIGNED_SHORT, 0);
+		}
 	}
-	
+
 }
 
 function prepBuffersForDrawing(bufferObj, shaderProg){
