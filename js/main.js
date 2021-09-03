@@ -25,6 +25,8 @@ var scene = (
     }
 )();
 
+var canvasDrawBlockFunc;
+
 var overlayctx;
 
 var doUponTerrainInitialised = function(terrainHeightData){
@@ -38,7 +40,7 @@ var doUponTerrainInitialised = function(terrainHeightData){
 
 	for (var ii=0;ii<terrainSize;ii++){
 		for (var jj=0;jj<terrainSize;jj++){
-			var colour = Math.floor(Math.min(255,Math.max(0,128+(400*terrainHeightData.getxy(ii,terrainSize-jj)))));
+			var colour = Math.floor(Math.min(255,Math.max(0,128+(400*terrainHeightData.getxy(ii,jj)))));
 			ctx.fillStyle = "rgba("+colour+",0,"+(255-colour)+",1)";
 			ctx.fillRect(ii,jj,1,1);
 		}
@@ -145,6 +147,7 @@ function init(){
 	overlaycanvas.height = terrainSize;
 	overlayctx = overlaycanvas.getContext("2d");
 	overlayctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+	canvasDrawBlockFunc = getCanvasDrawBlockFunc(overlayctx);
 
 	requestAnimationFrame(drawScene);
 }
@@ -192,7 +195,7 @@ function drawScene(frameTime){
 
 	overlayctx.clearRect(0, 0, terrainSize, terrainSize);
 
-	renderQuadtree(overlayctx, scene.getQuadtree());
+	renderQuadtree(scene.getQuadtree(), canvasDrawBlockFunc);
 
 	drawTerrain();
 }
@@ -234,22 +237,27 @@ function drawTerrain(){
 	// 	}
 	// }
 
-	//diagonal blocks starting from corner
-	for (var ii=0;ii<16;ii++){
-		drawBlock(shaderProg, bufferObj, downsizeAmount, ii, ii);
+
+	renderQuadtree(scene.getQuadtree(), glDrawBlock);
+
+	function glDrawBlock(xpos,ypos,size){
+		drawBlock(size*32/terrainSize, xpos/size, ypos/size);
 	}
+
+	function drawBlock(downsizeAmount, xx, yy){
+		var shiftAmount = downsizeAmount*(xx*VERTS_PER_DIVISION + yy*32);
+	
+		gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
+		gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize , gl.FLOAT, false, 12*downsizeAmount, 12*shiftAmount);
+		gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientBuffer);
+		gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 8*downsizeAmount, 8*shiftAmount);
+		gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems/32, gl.UNSIGNED_SHORT, 0);
+	}
+
 }
 
 
-function drawBlock(shaderProg, bufferObj, downsizeAmount, xx, yy){
-	var shiftAmount = downsizeAmount*(xx*VERTS_PER_DIVISION + yy*32);
 
-	gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
-	gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize , gl.FLOAT, false, 12*downsizeAmount, 12*shiftAmount);
-	gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientBuffer);
-	gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 8*downsizeAmount, 8*shiftAmount);
-	gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems/32, gl.UNSIGNED_SHORT, 0);
-}
 
 
 

@@ -36,16 +36,22 @@ function calculateQuadtree(viewpointPos, thisPart){
     return thisPart;
 }
 
-function renderQuadtree(ctx, quadTree){
+function renderQuadtree(quadTree, drawBlock){
     if (!quadTree){
         return; //inefficient. TODO ensure always defined
     }
 
     if (quadTree.totalLeafs == 1){
-        ctx.fillRect(quadTree.xpos, quadTree.ypos, quadTree.size, quadTree.size);
-        ctx.strokeRect(quadTree.xpos, quadTree.ypos, quadTree.size, quadTree.size);
+        drawBlock(quadTree.xpos, quadTree.ypos, quadTree.size);
     }else{
-        quadTree.children.forEach(function(item){renderQuadtree(ctx, item);});
+        quadTree.children.forEach(function(item){renderQuadtree(item, drawBlock);});
     }
 
 }
+
+function getCanvasDrawBlockFunc(ctx){
+    return function(xpos,ypos,size){
+        ctx.fillRect(xpos, ypos, size, size);
+        ctx.strokeRect(xpos, ypos, size, size);
+    }
+};
