@@ -54,23 +54,25 @@ var doUponTerrainInitialised = function(terrainHeightData){
 		}
 		//console.log(grads);
 		
-		//strip data
+		//draw a strip of strips (big "strip" stripWidth wide, formed of gridSize* strips of stripWidth length, and width 1 )
 
-		var startIdx=0;
-		var nextRowStartIdx = gridSize+1;
-
-		for (var ii=0;ii<gridSize/DIVISIONS;ii++){
-			indices.push(startIdx);
-			for (var jj=0;jj<=gridSize;jj++){
-				indices.push(startIdx++);
-				indices.push(nextRowStartIdx++);
+		var stripWidth = terrainSize/DIVISIONS;	//strip of strips	
+		var bottomOfRowIdx = 0;
+		for (var jj=0;jj<gridSize;jj++){
+			var idx = bottomOfRowIdx;
+			indices.push(idx);	//1st in strip will be repeated
+			for (var ii=0;ii<=stripWidth;ii++){
+				indices.push(idx++);
+				indices.push(idx);
+				idx+=gridSize; //gridSize+1 = one row of verts
 			}
-			indices.push(nextRowStartIdx-1);
+			indices.push(idx-gridSize);	//repeat last in strip
+			bottomOfRowIdx++;
 		}
 		indices.pop();
 		indices.shift();
 
-		return {vertices:vertices, grads:grads, indices:indices};
+		return {vertices, grads, indices};
 	})(terrainSize);
 
 	initBuffers(gridData);	
@@ -90,6 +92,8 @@ canvas.height = 600;
 function init(){
 	initGL();
 	
+	gl.cullFace(gl.FRONT);	//triangulation of terrain came out this way. can change if necessary
+
 	//check can clear colour
 	gl.clearColor.apply(gl,[1,1,0,1]);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
