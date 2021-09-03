@@ -9,7 +9,7 @@ var doUponTerrainInitialised = function(terrainHeightData){
 
 	for (var ii=0;ii<terrainSize;ii++){
 		for (var jj=0;jj<terrainSize;jj++){
-			var colour = Math.floor(Math.min(255,Math.max(0,128+(400*terrainHeightData.getxy(ii,jj)))));
+			var colour = Math.floor(Math.min(255,Math.max(0,128+(400*terrainHeightData.getxy(ii,terrainSize-jj)))));
 			ctx.fillStyle = "rgba("+colour+",0,"+(255-colour)+",1)";
 			ctx.fillRect(ii,jj,1,1);
 		}
@@ -206,11 +206,10 @@ var pMatrix = mat4.create();
 mat4.identity(pMatrix);
 //mat4.translate(mvMatrix,vec3.fromArray([0,0,-10])); //glmatix expects own vector type
 
-mvMatrix[14]=-0.2;	//move back to look at thing (is this camera or thing position?)
-mvMatrix[13]=-0.1;
-mvMatrix[12]=0;
+mvMatrix[14]=-0.7;	//move back to look at thing (is this camera or thing position?)
+mvMatrix[13]=-0.4;
+mvMatrix[12]=-0.5;
 
-mat4.rotateX(mvMatrix, -1.3);	//rads
-mat4.rotateZ(mvMatrix, 0.8);	//rads
+mat4.rotateX(mvMatrix, -0.5);	//rads
 
 init();
