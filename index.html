@@ -50,7 +50,10 @@
 	<canvas id="myglcanvas"></canvas>
 </div>
 
-<p>half scale?</p><input type="checkbox" id="halfscale">
+<div><p>downscale?</p><input type="checkbox" id="downscale"></div>
+
+<!--only relevant if downscale is checked, default (0) should be same as if downscale not checked-->
+<div><input type="range" min="0" max="5" step="1" value="0" id="scaleslider"></div>
 
 <script type="text/javascript" src="lib/stats.min.js"></script>
 <script type="text/javascript" src="utils/optional_stats.js"></script>

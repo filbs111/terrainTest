@@ -212,7 +212,13 @@ function drawTerrain(){
 	gl.uniformMatrix4fv(shaderProg.uniforms.uPMatrix, false, pMatrix);
 	gl.uniformMatrix4fv(shaderProg.uniforms.uMVMatrix, false, mvMatrix);
 
-	if (!document.getElementById("halfscale").checked){
+
+	var downsizeAmount = 1 << parseInt(document.getElementById("scaleslider").value);
+	//note things don't work right for downsize = 32 (expect to draw 1 32x32 tile). suspect because
+	// stride exceeds 256. if so, may want separate sets of vertices. also high stride might 
+	//mkae rendering slower...
+
+	if (!document.getElementById("downscale").checked){
 		for (var ii=0;ii<DIVISIONS;ii++){
 			//TODO interleaved single buffer to avoid bindbuffer calls?
 			gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
@@ -223,12 +229,12 @@ function drawTerrain(){
 			gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 		}
 	}else{
-		for (var ii=0;ii<DIVISIONS/2;ii++){
+		for (var ii=0;ii<DIVISIONS/downsizeAmount;ii++){
 			gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
-			gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize , gl.FLOAT, false, 24, ii*24*VERTS_PER_DIVISION);
+			gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize , gl.FLOAT, false, 12*downsizeAmount, ii*12*downsizeAmount*VERTS_PER_DIVISION);
 			gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientBuffer);
-			gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 16, ii*16*VERTS_PER_DIVISION);
-			gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems/2, gl.UNSIGNED_SHORT, 0);
+			gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 8*downsizeAmount, ii*8*downsizeAmount*VERTS_PER_DIVISION);
+			gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems/downsizeAmount, gl.UNSIGNED_SHORT, 0);
 		}
 	}
 
