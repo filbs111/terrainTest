@@ -22,8 +22,13 @@
 		//vColor= vec3(1.0,0.0,0.0);
 		//vColor= aVertexPosition;
 		
-		//vColor= vec3(0.0, 1.0+10.0*aVertexPosition.z, 1.0-10.0*aVertexPosition.z);
-		vColor= vec3(0.5+20.0*aVertexGradient.x);
+		float scale = 0.0625;
+		vec2 modvec = mod(aVertexPosition.xy , scale) - vec2(0.5*scale);
+		float lensq = dot(modvec, modvec);
+		float stepped = step(0.0004, lensq);
+
+		vColor= stepped * vec3(0.5+50.0*aVertexGradient.x, 0.5+50.0*aVertexGradient.y, 1.0);
+		//vColor= vec3(0.5+20.0*aVertexGradient.x);
 	}
 </script>
 
