@@ -98,8 +98,6 @@ var doUponTerrainInitialised = function(terrainHeightData){
 			indices.push(idx-gridSize);	//repeat last in strip
 			bottomOfRowIdx++;
 		}
-		indices.pop();
-		indices.shift();
 
 		return {vertices, grads, indices};
 	})(terrainSize);
@@ -121,8 +119,6 @@ canvas.height = 600;
 function init(){
 	initGL();
 	
-	gl.cullFace(gl.FRONT);	//triangulation of terrain came out this way. can change if necessary
-
 	//check can clear colour
 	gl.clearColor.apply(gl,[1,1,0,1]);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
