@@ -33,6 +33,7 @@ var canvasDrawBlockFunc;
 
 var overlayctx;
 
+
 var doUponTerrainInitialised = function(terrainHeightData){
 
 	//draw stuff to a canvas. acting on imagedata faster but fillrect quicker to code...
@@ -164,7 +165,6 @@ function init(){
 	overlaycanvas.width = terrainSize;
 	overlaycanvas.height = terrainSize;
 	overlayctx = overlaycanvas.getContext("2d");
-	overlayctx.fillStyle = "rgba(255, 255, 255, 0.5)";
 	canvasDrawBlockFunc = getCanvasDrawBlockFunc(overlayctx);
 
 	requestAnimationFrame(drawScene);
@@ -217,9 +217,30 @@ function drawScene(frameTime){
 	stats.get().end();
 	stats.get().begin();
 
-	overlayctx.clearRect(0, 0, terrainSize, terrainSize);
 
+	overlayctx.clearRect(0, 0, terrainSize, terrainSize);
+	overlayctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+	overlayctx.strokeStyle = "#FFF";
 	renderQuadtree(scene.getQuadtree(), canvasDrawBlockFunc);
+
+	//draw point, ranges
+	overlayctx.fillStyle = "#F00";
+    overlayctx.strokeStyle = "#F00";
+    var dotHalfSize = 5;
+	var viewpointPos = scene.getPos();
+    overlayctx.fillRect(viewpointPos.x - dotHalfSize, viewpointPos.y - dotHalfSize, 2*dotHalfSize, 2*dotHalfSize);
+    drawCentredSquare(viewpointPos.x, viewpointPos.y, MIN_SIZE*(MULTIPLIER*2-1));
+        //covers 2 quadtree levels. more detailed level must be morphed to less detailed
+    drawCentredSquare(viewpointPos.x, viewpointPos.y, MIN_SIZE*(MULTIPLIER*2+1));
+        //guaranteed to be some quadtree level. within this range, should transfer gradually to less detailed level
+    drawCentredSquare(viewpointPos.x, viewpointPos.y, 2*MIN_SIZE*(MULTIPLIER*2-1));
+        //...
+    drawCentredSquare(viewpointPos.x, viewpointPos.y, 2*MIN_SIZE*(MULTIPLIER*2+1));
+    drawCentredSquare(viewpointPos.x, viewpointPos.y, 4*MIN_SIZE*(MULTIPLIER*2-1));
+
+	function drawCentredSquare(x,y,size){
+		overlayctx.strokeRect(x - size, y - size, 2*size, 2*size);
+	}
 
 	drawTerrain();
 }
