@@ -22,16 +22,7 @@
 	
 	void main(void) {
 
-		vec2 modvec = mod(aVertexPosition.xy - vec2(uMorphScale) , 2.0*uMorphScale) - vec2(uMorphScale);
-		modvec/=uMorphScale;	//normalise
-		float lensq = dot(modvec, modvec);
-		float stepped = step(0.1, lensq);	//number doesn't matter much
-		float blendAmount = stepped*uMorphAmount;
-
-		vec3 vertexBlended = blendAmount*aVertexMorph + (1.0-blendAmount)*aVertexPosition;
-		vec2 gradBlended = blendAmount*aVertexGradientMorph + (1.0-blendAmount)*aVertexGradient;
-		
-		vec2 absDist = abs(vertexBlended.xy - uCentrePos);
+		vec2 absDist = abs(aVertexPosition.xy - uCentrePos);
 
 		//Chebyshev distance
 		float distFromCentre = max(absDist.x, absDist.y);
@@ -39,6 +30,18 @@
 		float transitionRangeB = 96.0*uMorphScale;
 
 		float doubleStep = 0.5* (step(transitionRange, distFromCentre) + step(transitionRangeB, distFromCentre));
+
+
+		vec2 modvec = mod(aVertexPosition.xy - vec2(uMorphScale) , 2.0*uMorphScale) - vec2(uMorphScale);
+		modvec/=uMorphScale;	//normalise
+		float lensq = dot(modvec, modvec);
+		float stepped = step(0.1, lensq);	//number doesn't matter much
+		float blendAmount = stepped*uMorphAmount*doubleStep;
+
+		vec3 vertexBlended = blendAmount*aVertexMorph + (1.0-blendAmount)*aVertexPosition;
+		vec2 gradBlended = blendAmount*aVertexGradientMorph + (1.0-blendAmount)*aVertexGradient;
+		
+		
 
 		vec4 transformedCoord = uMVMatrix * vec4(vertexBlended,1.0);	//todo use 4x3 mat?
 		gl_Position = uPMatrix * transformedCoord;	
