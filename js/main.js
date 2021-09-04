@@ -148,7 +148,7 @@ function init(){
 	initGL();
 	
 	//check can clear colour
-	gl.clearColor.apply(gl,[1,1,0,1]);
+	gl.clearColor.apply(gl,[0,1,0,1]);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 	initShaders();
@@ -248,6 +248,8 @@ function drawScene(frameTime){
 	function drawCentredSquare(x,y,size){
 		overlayctx.strokeRect(x - size, y - size, 2*size, 2*size);
 	}
+
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 	drawTerrain();
 }
