@@ -173,7 +173,7 @@ function init(){
 var shaderPrograms={};
 function initShaders(){
 	shaderPrograms.simple = loadShader( "shader-simple-vs", "shader-simple-fs",{
-					attributes:["aVertexPosition", "aVertexMorph", "aVertexGradient"],
+					attributes:["aVertexPosition", "aVertexMorph", "aVertexGradient", "aVertexGradientMorph"],
 					uniforms:["uMVMatrix","uPMatrix","uCentrePos","uMorphAmount","uMorphScale"]
 					});
 }
@@ -187,8 +187,10 @@ function initBuffers(sourceData){
 	bufferArrayData(bufferObj.vertexMorphBuffer, sourceData.morphverts, 3);
 
 	bufferObj.vertexGradientBuffer = gl.createBuffer();
-	// bufferArrayData(bufferObj.vertexGradientBuffer, sourceData.grads, 2);
-	bufferArrayData(bufferObj.vertexGradientBuffer, sourceData.morphgrads, 2);	//just for demo (todo load both morph, non morph)
+	bufferArrayData(bufferObj.vertexGradientBuffer, sourceData.grads, 2);
+	bufferObj.vertexGradientMorphBuffer = gl.createBuffer();
+	bufferArrayData(bufferObj.vertexGradientMorphBuffer, sourceData.morphgrads, 2);	
+
 	bufferObj.vertexIndexBuffer = gl.createBuffer();
 
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferObj.vertexIndexBuffer);
@@ -280,6 +282,9 @@ function drawTerrain(){
 		
 		gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientBuffer);
 		gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 8*downsizeAmount, 8*shiftAmount);
+		gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientMorphBuffer);
+		gl.vertexAttribPointer(shaderProg.attributes.aVertexGradientMorph, bufferObj.vertexGradientMorphBuffer.itemSize, gl.FLOAT, false, 8*downsizeAmount, 8*shiftAmount);
+
 		gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems/32, gl.UNSIGNED_SHORT, 0);
 	}
 

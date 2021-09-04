@@ -11,6 +11,7 @@
 	attribute vec3 aVertexPosition;
 	attribute vec3 aVertexMorph;
 	attribute vec2 aVertexGradient;
+	attribute vec2 aVertexGradientMorph;
 	//attribute vec3 aVertexNormal;
 	uniform mat4 uMVMatrix;
 	uniform mat4 uPMatrix;
@@ -28,7 +29,8 @@
 		float blendAmount = stepped*uMorphAmount;
 
 		vec3 vertexBlended = blendAmount*aVertexMorph + (1.0-blendAmount)*aVertexPosition;
-
+		vec2 gradBlended = blendAmount*aVertexGradientMorph + (1.0-blendAmount)*aVertexGradient;
+		
 		float distFromCentre = length(vertexBlended.xy - uCentrePos);
 		float ringSize = 0.05;
 
@@ -38,9 +40,7 @@
 		//vColor= vec3(1.0,0.0,0.0);
 		//vColor= aVertexPosition;
 		
-		
-		//vColor= stepped * vec3(0.5+50.0*aVertexGradient.x, 0.5+50.0*aVertexGradient.y, mod(distFromCentre,0.05));
-		vColor= stepped* vec3(0.5+50.0*aVertexGradient.x, 0.5+50.0*aVertexGradient.y, mod(distFromCentre,ringSize)/ringSize);
+		vColor= stepped* vec3(0.5+50.0*gradBlended.x, 0.5+50.0*gradBlended.y, mod(distFromCentre,ringSize)/ringSize);
 
 		//vColor= vec3(0.5+20.0*aVertexGradient.x);
 	}
