@@ -33,3 +33,15 @@ function testDownsizeMapping(){
 function isPOT(n){
     return n && (n & (n - 1)) === 0
 }
+
+function downsizePair(ii,jj){
+    var coordOr = ii | jj;
+    var mappedOr = downsizeMapping[coordOr];
+    var bitmask = ~(coordOr- mappedOr);
+    var mappedx = bitmask&ii;
+    var mappedy = bitmask&jj;
+    return {mappedx, mappedy}
+}
+
+//note doing this way is hacky, maybe slow. TODO either generate 2d downsize mapping, or run through 
+//multiple scales directly rather than generating mapping...

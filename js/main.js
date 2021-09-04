@@ -92,9 +92,8 @@ var doUponTerrainInitialised = function(terrainHeightData){
 		var morphverts=[];
 		var morphgrads=[];
 		for (var ii=0;ii<=gridSize;ii++){
-			var mappedx = downsizeMapping[ii];
 			for (var jj=0;jj<=gridSize;jj++){
-				var mappedy = downsizeMapping[jj];
+				var {mappedx, mappedy} = downsizePair(ii,jj);
 				var mapped = mappedx*(gridSize+1) + mappedy;
 				morphverts.push(vertices[mapped*3]);
 				morphverts.push(vertices[mapped*3+1]);
@@ -174,8 +173,8 @@ function init(){
 var shaderPrograms={};
 function initShaders(){
 	shaderPrograms.simple = loadShader( "shader-simple-vs", "shader-simple-fs",{
-					attributes:["aVertexPosition", "aVertexGradient"],
-					uniforms:["uMVMatrix","uPMatrix","uCentrePos"]
+					attributes:["aVertexPosition", "aVertexMorph", "aVertexGradient"],
+					uniforms:["uMVMatrix","uPMatrix","uCentrePos","uMorphAmount","uMorphScale"]
 					});
 }
 var terrainBuffer={};
@@ -184,6 +183,8 @@ function initBuffers(sourceData){
 		
 	bufferObj.vertexPositionBuffer = gl.createBuffer();
 	bufferArrayData(bufferObj.vertexPositionBuffer, sourceData.vertices, 3);
+	bufferObj.vertexMorphBuffer = gl.createBuffer();
+	bufferArrayData(bufferObj.vertexMorphBuffer, sourceData.morphverts, 3);
 
 	bufferObj.vertexGradientBuffer = gl.createBuffer();
 	// bufferArrayData(bufferObj.vertexGradientBuffer, sourceData.grads, 2);
@@ -258,6 +259,7 @@ function drawTerrain(){
 	// 	}
 	// }
 
+	gl.uniform1f(shaderProg.uniforms.uMorphAmount, parseFloat(document.getElementById("morphslider").value) );
 
 	renderQuadtree(scene.getQuadtree(), glDrawBlock);
 
@@ -266,10 +268,16 @@ function drawTerrain(){
 	}
 
 	function drawBlock(downsizeAmount, xx, yy){
+	
+		gl.uniform1f(shaderProg.uniforms.uMorphScale, downsizeAmount/1024 );	//TODO draw blocks at each scale consecutively, so don't call this every block
+	
 		var shiftAmount = downsizeAmount*(xx*VERTS_PER_DIVISION + yy*32);
 	
 		gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
 		gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize , gl.FLOAT, false, 12*downsizeAmount, 12*shiftAmount);
+		gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexMorphBuffer);
+		gl.vertexAttribPointer(shaderProg.attributes.aVertexMorph, bufferObj.vertexMorphBuffer.itemSize , gl.FLOAT, false, 12*downsizeAmount, 12*shiftAmount);
+		
 		gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientBuffer);
 		gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 8*downsizeAmount, 8*shiftAmount);
 		gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems/32, gl.UNSIGNED_SHORT, 0);
