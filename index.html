@@ -17,7 +17,6 @@
 	uniform mat4 uPMatrix;
 	uniform vec2 uCentrePos;
 	uniform float uMorphScale;
-	uniform float uMorphAmount;
 	varying vec3 vColor;
 	
 	void main(void) {
@@ -39,7 +38,7 @@
 		modvec/=uMorphScale;	//normalise
 		float lensq = dot(modvec, modvec);
 		float stepped = step(0.1, lensq);	//number doesn't matter much
-		float blendAmount = stepped*uMorphAmount*morphContinuous;
+		float blendAmount = stepped*morphContinuous;
 
 		vec3 vertexBlended = blendAmount*aVertexMorph + (1.0-blendAmount)*aVertexPosition;
 		vec2 gradBlended = blendAmount*aVertexGradientMorph + (1.0-blendAmount)*aVertexGradient;
@@ -85,7 +84,6 @@
 
 <!--only relevant if downscale is checked, default (0) should be same as if downscale not checked-->
 <div><input type="range" min="0" max="5" step="1" value="0" id="scaleslider"></div>
-<div><input type="range" min="0" max="1" step="0.1" value="0" id="morphslider"></div>
 
 <script type="text/javascript" src="lib/stats.min.js"></script>
 <script type="text/javascript" src="utils/optional_stats.js"></script>

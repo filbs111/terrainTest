@@ -174,7 +174,7 @@ var shaderPrograms={};
 function initShaders(){
 	shaderPrograms.simple = loadShader( "shader-simple-vs", "shader-simple-fs",{
 					attributes:["aVertexPosition", "aVertexMorph", "aVertexGradient", "aVertexGradientMorph"],
-					uniforms:["uMVMatrix","uPMatrix","uCentrePos","uMorphAmount","uMorphScale"]
+					uniforms:["uMVMatrix","uPMatrix","uCentrePos","uMorphScale"]
 					});
 }
 var terrainBuffer={};
@@ -281,8 +281,6 @@ function drawTerrain(){
 	// 		gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems/downsizeAmount, gl.UNSIGNED_SHORT, 0);
 	// 	}
 	// }
-
-	gl.uniform1f(shaderProg.uniforms.uMorphAmount, parseFloat(document.getElementById("morphslider").value) );
 
 	renderQuadtree(scene.getQuadtree(), glDrawBlock);
 
