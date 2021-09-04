@@ -1,3 +1,5 @@
+var centrePos = [0.5,0.5];
+
 //quadtree stuff
 var scene = (
     function(){
@@ -9,6 +11,8 @@ var scene = (
 			var rect = e.target.getBoundingClientRect();
 			viewpointPos.x = e.clientX - rect.left; //x position within the element.
 			viewpointPos.y = e.clientY - rect.top;
+
+			centrePos = [viewpointPos.x/terrainSize, viewpointPos.y/terrainSize];
 
             quadtree = calculateQuadtree(viewpointPos, {xpos:0, ypos:0, size:terrainSize});
             console.log(quadtree);
@@ -156,7 +160,7 @@ var shaderPrograms={};
 function initShaders(){
 	shaderPrograms.simple = loadShader( "shader-simple-vs", "shader-simple-fs",{
 					attributes:["aVertexPosition", "aVertexGradient"],
-					uniforms:["uMVMatrix","uPMatrix"]
+					uniforms:["uMVMatrix","uPMatrix","uCentrePos"]
 					});
 }
 var terrainBuffer={};
@@ -210,7 +214,7 @@ function drawTerrain(){
 
 	gl.uniformMatrix4fv(shaderProg.uniforms.uPMatrix, false, pMatrix);
 	gl.uniformMatrix4fv(shaderProg.uniforms.uMVMatrix, false, mvMatrix);
-
+	gl.uniform2fv(shaderProg.uniforms.uCentrePos, centrePos);
 
 	var downsizeAmount = 1 << parseInt(document.getElementById("scaleslider").value);
 	//note things don't work right for downsize = 32 (expect to draw 1 32x32 tile). suspect because

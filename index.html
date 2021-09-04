@@ -13,6 +13,7 @@
 	//attribute vec3 aVertexNormal;
 	uniform mat4 uMVMatrix;
 	uniform mat4 uPMatrix;
+	uniform vec2 uCentrePos;
 	varying vec3 vColor;
 	
 	void main(void) {
@@ -26,8 +27,11 @@
 		vec2 modvec = mod(aVertexPosition.xy , scale) - vec2(0.5*scale);
 		float lensq = dot(modvec, modvec);
 		float stepped = step(0.0004, lensq);
+		float distFromCentre = length(aVertexPosition.xy - uCentrePos);
+		float ringSize = 0.05;
+		//vColor= stepped * vec3(0.5+50.0*aVertexGradient.x, 0.5+50.0*aVertexGradient.y, mod(distFromCentre,0.05));
+		vColor= vec3(0.5+50.0*aVertexGradient.x, 0.5+50.0*aVertexGradient.y, mod(distFromCentre,ringSize)/ringSize);
 
-		vColor= stepped * vec3(0.5+50.0*aVertexGradient.x, 0.5+50.0*aVertexGradient.y, 1.0);
 		//vColor= vec3(0.5+20.0*aVertexGradient.x);
 	}
 </script>
