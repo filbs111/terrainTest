@@ -12,11 +12,17 @@ var scene = (
 			viewpointPos.x = e.clientX - rect.left; //x position within the element.
 			viewpointPos.y = e.clientY - rect.top;
 
-			centrePos = [viewpointPos.x/terrainSize, viewpointPos.y/terrainSize];
-
-            quadtree = calculateQuadtree(viewpointPos, {xpos:0, ypos:0, size:terrainSize});
-            console.log(quadtree);
+            setPos(viewpointPos.x, viewpointPos.y);
+			console.log(quadtree);
         });
+
+		function setPos(xx,yy){
+			viewpointPos.x = xx;
+			viewpointPos.y = yy;
+			centrePos = [viewpointPos.x/terrainSize, viewpointPos.y/terrainSize];
+            quadtree = calculateQuadtree(viewpointPos, {xpos:0, ypos:0, size:terrainSize});
+			return quadtree;
+		}
 
         return {
             getPos: function(){
@@ -24,7 +30,8 @@ var scene = (
             },
             getQuadtree: function(){
                 return quadtree;
-            }
+            },
+			setPos
         }
     }
 )();
@@ -245,9 +252,24 @@ function drawScene(frameTime){
 	drawTerrain();
 }
 
+var moveVel={x:1,y:1};
+
 function drawTerrain(){
 	
 	if (!terrainBuffer.isInitialised){return;}
+
+	if (document.getElementById("automove").checked){
+		var currentPos = scene.getPos();
+		var newx = currentPos.x + moveVel.x;
+		if (newx>terrainSize || newx<0){
+			moveVel.x=-moveVel.x;
+		}
+		var newy = currentPos.y + moveVel.y;
+		if (newy>terrainSize || newy<0){
+			moveVel.y=-moveVel.y;
+		}
+		scene.setPos(newx, newy);
+	}
 
 	// drawObjectFromPreppedBuffers(terrainBuffer, shaderPrograms.simple);
 	var shaderProg = shaderPrograms.simple;
