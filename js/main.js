@@ -87,7 +87,22 @@ var doUponTerrainInitialised = function(terrainHeightData){
 				grads.push(vertex2dData[ii][(jj+1)&terrainSizeMinusOne] - vertex2dData[ii][(jj-1)&terrainSizeMinusOne]);
 			}
 		}
-		//console.log(grads);
+
+		//extra positions/grads for morphing LOD transition
+		var morphverts=[];
+		var morphgrads=[];
+		for (var ii=0;ii<=gridSize;ii++){
+			var mappedx = downsizeMapping[ii];
+			for (var jj=0;jj<=gridSize;jj++){
+				var mappedy = downsizeMapping[jj];
+				var mapped = mappedx*(gridSize+1) + mappedy;
+				morphverts.push(vertices[mapped*3]);
+				morphverts.push(vertices[mapped*3+1]);
+				morphverts.push(vertices[mapped*3+2]);
+				morphgrads.push(grads[mapped*2]);
+				morphgrads.push(grads[mapped*2+1]);
+			}
+		}
 		
 		//draw a strip of strips (big "strip" stripWidth wide, formed of gridSize* strips of stripWidth length, and width 1 )
 
@@ -105,7 +120,7 @@ var doUponTerrainInitialised = function(terrainHeightData){
 			bottomOfRowIdx++;
 		}
 
-		return {vertices, grads, indices};
+		return {vertices, grads, morphverts, morphgrads, indices};
 	})(terrainSize);
 
 	initBuffers(gridData);	
@@ -169,8 +184,10 @@ function initBuffers(sourceData){
 		
 	bufferObj.vertexPositionBuffer = gl.createBuffer();
 	bufferArrayData(bufferObj.vertexPositionBuffer, sourceData.vertices, 3);
+
 	bufferObj.vertexGradientBuffer = gl.createBuffer();
-	bufferArrayData(bufferObj.vertexGradientBuffer, sourceData.grads, 2);
+	// bufferArrayData(bufferObj.vertexGradientBuffer, sourceData.grads, 2);
+	bufferArrayData(bufferObj.vertexGradientBuffer, sourceData.morphgrads, 2);	//just for demo (todo load both morph, non morph)
 	bufferObj.vertexIndexBuffer = gl.createBuffer();
 
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferObj.vertexIndexBuffer);
