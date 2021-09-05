@@ -233,14 +233,13 @@ function drawScene(frameTime){
 	var forwardMove=-movementSpeed*(keyThing.keystate(87)-keyThing.keystate(83));	//fwd/back
 	var unrotatedMoveVector = [sideMove,0,forwardMove];
 	
-	mat4.inverse(camMatrix);
 	mat4.rotateY(camMatrix,turnInput);
 	mat4.rotateX(camMatrix,pitchInput);
 	mat4.rotateZ(camMatrix,rollInput);
 	mat4.translate(camMatrix, unrotatedMoveVector);
-	mat4.inverse(camMatrix);
 
 	mat4.set(camMatrix,mvMatrix);
+	mat4.inverse(mvMatrix);
 
 	overlayctx.clearRect(0, 0, terrainSize, terrainSize);
 	overlayctx.fillStyle = "rgba(255, 255, 255, 0.5)";
@@ -278,16 +277,7 @@ function drawTerrain(){
 	if (!terrainBuffer.isInitialised){return;}
 
 	if (document.getElementById("automove").checked){
-		var currentPos = scene.getPos();
-		var newx = currentPos.x + moveVel.x;
-		if (newx>terrainSize || newx<0){
-			moveVel.x=-moveVel.x;
-		}
-		var newy = currentPos.y + moveVel.y;
-		if (newy>terrainSize || newy<0){
-			moveVel.y=-moveVel.y;
-		}
-		scene.setPos(newx, newy);
+		scene.setPos(camMatrix[12]*terrainSize, camMatrix[13]*terrainSize);
 	}
 
 	// drawObjectFromPreppedBuffers(terrainBuffer, shaderPrograms.simple);
@@ -374,5 +364,6 @@ mat4.rotateX(mvMatrix, -0.5);	//rads
 
 var camMatrix = mat4.create(mvMatrix);	//just setting mvMatrix to this, so could get away with 
 				//later may wish to alter mvMatrix (to position things in world)
+mat4.inverse(camMatrix);
 
 init();
