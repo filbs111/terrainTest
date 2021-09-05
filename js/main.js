@@ -313,7 +313,25 @@ function drawTerrain(){
 	// 	}
 	// }
 
-	renderQuadtree(scene.getQuadtree(), glDrawBlock);
+	if (document.getElementById("bruteforce").checked){
+		for (var ii=0;ii<DIVISIONS;ii++){
+			//TODO interleaved single buffer to avoid bindbuffer calls?
+			gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
+			gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize , gl.FLOAT, false, 0, ii*12*VERTS_PER_DIVISION);
+			gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexMorphBuffer);
+			gl.vertexAttribPointer(shaderProg.attributes.aVertexMorph, bufferObj.vertexMorphBuffer.itemSize , gl.FLOAT, false, 0, ii*12*VERTS_PER_DIVISION);
+			
+			gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientBuffer);
+			gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 0, ii*8*VERTS_PER_DIVISION);
+			gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientMorphBuffer);
+			gl.vertexAttribPointer(shaderProg.attributes.aVertexGradientMorph, bufferObj.vertexGradientMorphBuffer.itemSize, gl.FLOAT, false, 0, ii*8*VERTS_PER_DIVISION);
+
+			gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+		}
+	}else{
+		renderQuadtree(scene.getQuadtree(), glDrawBlock);
+	}
+
 
 	function glDrawBlock(xpos,ypos,size){
 		drawBlock(size*32/terrainSize, xpos/size, ypos/size);
