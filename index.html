@@ -9,6 +9,21 @@
 <script id="shader-simple-vs" type="x-shader/x-vertex">
 
 	attribute vec3 aVertexPosition;
+	attribute vec2 aVertexGradient;
+	uniform mat4 uMVMatrix;
+	uniform mat4 uPMatrix;
+	varying vec3 vColor;
+	
+	void main(void) {
+		vec4 transformedCoord = uMVMatrix * vec4(aVertexPosition,1.0);	//todo use 4x3 mat?
+		gl_Position = uPMatrix * transformedCoord;	
+		vColor= vec3(0.5+50.0*aVertexGradient.x, 0.5+50.0*aVertexGradient.y, 1.0);
+	}
+</script>
+
+<script id="shader-morph-vs" type="x-shader/x-vertex">
+
+	attribute vec3 aVertexPosition;
 	attribute vec3 aVertexMorph;
 	attribute vec2 aVertexGradient;
 	attribute vec2 aVertexGradientMorph;
@@ -80,11 +95,20 @@
 	<canvas id="myglcanvas"></canvas>
 </div>
 
-<div><p>auto move</p><input type="checkbox" id="automove"></div>
-<div><p>brute force</p><input type="checkbox" id="bruteforce"></div>
+<div>
+	<label for="automove">auto move:</label>
+	<input type="checkbox" id="automove">
+
+	<label for="rendertype">render type:</label>
+	<select name="rendertype" id="rendertype">
+		<option value="bruteforce">Brute Force</option>
+		<option value="bruteforcenomorph">Brute Force No Morph</option>
+		<option value="morphing">Morphing</option>
+	</select>
+</div>
 
 <!--only relevant if downscale is checked, default (0) should be same as if downscale not checked-->
-<div><input type="range" min="0" max="5" step="1" value="0" id="scaleslider"></div>
+<!-- <div><input type="range" min="0" max="5" step="1" value="0" id="scaleslider"></div> -->
 
 <script type="text/javascript" src="lib/stats.min.js"></script>
 <script type="text/javascript" src="utils/optional_stats.js"></script>

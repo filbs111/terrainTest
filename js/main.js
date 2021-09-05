@@ -144,6 +144,19 @@ canvas.height = 600;
 //TODO 
 //create buffers, shaders, initialise gl etc etc...
 
+var switchShader= (function(){
+	var currentShader;
+	return function(shader){
+		if (currentShader==shader){
+			return;
+		}
+		currentShader = shader;
+		gl.useProgram(shader);
+		prepBuffersForDrawing(terrainBuffer, shader);
+	}
+
+})();
+
 function init(){
 	initGL();
 	
@@ -159,9 +172,7 @@ function init(){
 	mat4.perspective(60, gl.viewportWidth/gl.viewportHeight, 0.01,10.0,pMatrix);	//apparently 0.9.5, last param is matrix rather than 1st!! todo use newer???
 																	//also old one uses degs!
 	
-	gl.useProgram(shaderPrograms.simple);
-
-	prepBuffersForDrawing(terrainBuffer, shaderPrograms.simple);
+	switchShader(shaderPrograms.simple);
 	
     gl.enable(gl.DEPTH_TEST);
 	gl.enable(gl.CULL_FACE);
@@ -180,9 +191,13 @@ function init(){
 var shaderPrograms={};
 function initShaders(){
 	shaderPrograms.simple = loadShader( "shader-simple-vs", "shader-simple-fs",{
-					attributes:["aVertexPosition", "aVertexMorph", "aVertexGradient", "aVertexGradientMorph"],
-					uniforms:["uMVMatrix","uPMatrix","uCentrePos","uMorphScale"]
-					});
+		attributes:["aVertexPosition", "aVertexGradient"],
+		uniforms:["uMVMatrix","uPMatrix"]
+		});
+	shaderPrograms.morph = loadShader( "shader-morph-vs", "shader-simple-fs",{
+		attributes:["aVertexPosition", "aVertexMorph", "aVertexGradient", "aVertexGradientMorph"],
+		uniforms:["uMVMatrix","uPMatrix","uCentrePos","uMorphScale"]
+		});
 }
 var terrainBuffer={};
 function initBuffers(sourceData){
@@ -280,15 +295,23 @@ function drawTerrain(){
 		scene.setPos(camMatrix[12]*terrainSize, camMatrix[13]*terrainSize);
 	}
 
-	// drawObjectFromPreppedBuffers(terrainBuffer, shaderPrograms.simple);
-	var shaderProg = shaderPrograms.simple;
-	var bufferObj = terrainBuffer;
+	var rendertype = document.getElementById("rendertype").value;
 
+	// drawObjectFromPreppedBuffers(terrainBuffer, shaderPrograms.simple);
+
+	
+	var shaderProg = (rendertype=="bruteforcenomorph") ? shaderPrograms.simple: shaderPrograms.morph;
+	switchShader(shaderProg);
+
+	if (shaderProg.uniforms.uCentrePos){
+		gl.uniform2fv(shaderProg.uniforms.uCentrePos, centrePos);
+	}
 	gl.uniformMatrix4fv(shaderProg.uniforms.uPMatrix, false, pMatrix);
 	gl.uniformMatrix4fv(shaderProg.uniforms.uMVMatrix, false, mvMatrix);
-	gl.uniform2fv(shaderProg.uniforms.uCentrePos, centrePos);
+	
+	var bufferObj = terrainBuffer;
 
-	var downsizeAmount = 1 << parseInt(document.getElementById("scaleslider").value);
+	//var downsizeAmount = 1 << parseInt(document.getElementById("scaleslider").value);
 	//note things don't work right for downsize = 32 (expect to draw 1 32x32 tile). suspect because
 	// stride exceeds 256. if so, may want separate sets of vertices. also high stride might 
 	//make rendering slower...
@@ -313,7 +336,8 @@ function drawTerrain(){
 	// 	}
 	// }
 
-	if (document.getElementById("bruteforce").checked){
+	
+	if (rendertype == 'bruteforce'){
 		for (var ii=0;ii<DIVISIONS;ii++){
 			//TODO interleaved single buffer to avoid bindbuffer calls?
 			gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
@@ -326,6 +350,17 @@ function drawTerrain(){
 			gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientMorphBuffer);
 			gl.vertexAttribPointer(shaderProg.attributes.aVertexGradientMorph, bufferObj.vertexGradientMorphBuffer.itemSize, gl.FLOAT, false, 0, ii*8*VERTS_PER_DIVISION);
 
+			gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+		}
+	}else if(rendertype == 'bruteforcenomorph'){
+		for (var ii=0;ii<DIVISIONS;ii++){
+			//TODO interleaved single buffer to avoid bindbuffer calls?
+			gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexPositionBuffer);
+			gl.vertexAttribPointer(shaderProg.attributes.aVertexPosition, bufferObj.vertexPositionBuffer.itemSize , gl.FLOAT, false, 0, ii*12*VERTS_PER_DIVISION);
+			
+			gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientBuffer);
+			gl.vertexAttribPointer(shaderProg.attributes.aVertexGradient, bufferObj.vertexGradientBuffer.itemSize, gl.FLOAT, false, 0, ii*8*VERTS_PER_DIVISION);
+			
 			gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 		}
 	}else{
