@@ -156,7 +156,7 @@ function init(){
 	loadHeightmapTerrain(terrainSize, doUponTerrainInitialised);
 
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-	mat4.perspective(60, gl.viewportWidth/gl.viewportHeight, 0.1,200.0,pMatrix);	//apparently 0.9.5, last param is matrix rather than 1st!! todo use newer???
+	mat4.perspective(60, gl.viewportWidth/gl.viewportHeight, 0.01,10.0,pMatrix);	//apparently 0.9.5, last param is matrix rather than 1st!! todo use newer???
 																	//also old one uses degs!
 	
 	gl.useProgram(shaderPrograms.simple);
