@@ -224,6 +224,23 @@ function drawScene(frameTime){
 	stats.get().end();
 	stats.get().begin();
 
+	var movementSpeed = 0.001;
+	//simple controls. TODO framerate dependent
+	var turnInput=-0.005*(keyThing.keystate(39)-keyThing.keystate(37)); //turn
+	var pitchInput=-0.005*(keyThing.keystate(40)-keyThing.keystate(38)); //pitch
+	var rollInput=-0.01*(keyThing.keystate(69)-keyThing.keystate(81));
+	var sideMove=-movementSpeed*(keyThing.keystate(65)-keyThing.keystate(68));	//lateral
+	var forwardMove=-movementSpeed*(keyThing.keystate(87)-keyThing.keystate(83));	//fwd/back
+	var unrotatedMoveVector = [sideMove,0,forwardMove];
+	
+	mat4.inverse(camMatrix);
+	mat4.rotateY(camMatrix,turnInput);
+	mat4.rotateX(camMatrix,pitchInput);
+	mat4.rotateZ(camMatrix,rollInput);
+	mat4.translate(camMatrix, unrotatedMoveVector);
+	mat4.inverse(camMatrix);
+
+	mat4.set(camMatrix,mvMatrix);
 
 	overlayctx.clearRect(0, 0, terrainSize, terrainSize);
 	overlayctx.fillStyle = "rgba(255, 255, 255, 0.5)";
@@ -354,5 +371,8 @@ mvMatrix[13]=-0.4;
 mvMatrix[12]=-0.5;
 
 mat4.rotateX(mvMatrix, -0.5);	//rads
+
+var camMatrix = mat4.create(mvMatrix);	//just setting mvMatrix to this, so could get away with 
+				//later may wish to alter mvMatrix (to position things in world)
 
 init();
