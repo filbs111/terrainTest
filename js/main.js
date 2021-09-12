@@ -21,7 +21,74 @@ var scene = (
 			viewpointPos.y = yy;
 			centrePos = [viewpointPos.x/terrainSize, viewpointPos.y/terrainSize];
             quadtree = calculateQuadtree(viewpointPos, {xpos:0, ypos:0, size:terrainSize});
+
+			//generate list of strips for drawing (combined blocks)
+			blocksforscales = {};
+			renderQuadtree(quadtree, generateBlockInfo);
+			//console.log(blocksforscales);
+
+			var blockStrips = blockStripsFromBlockInfo(blocksforscales);
+			console.log(blockStrips);
+
 			return quadtree;
+		}
+
+		//generate a list of strips covering consectutive quadtree blocks
+		//note this code is inefficient, and is intended to test performance improvement of 
+		//rendering consecutive blocks using single draw calls. optimise if works.
+		//note that with square morph ranges, easy to calculate strips without use of quadtree data.
+		//also, can extend strips up to morph ranges- no need to stick to quadtree...
+
+		var blocksforscales;
+		function generateBlockInfo(xpos,ypos,size){
+			// console.log("in generateBlockInfo. blocksforscales = " + blockstrips)
+			var combocoords = 1024*ypos + xpos;
+			if (!blocksforscales[size]){
+				blocksforscales[size]=[];
+			}
+			blocksforscales[size].push(combocoords);
+		}
+		function blockStripsFromBlockInfo(blocksforscales){
+			var scales = Object.keys(blocksforscales);
+			var blockStripsForScales={};
+			for (var ss of scales){
+				ss = Number.parseInt(ss);	//??
+				console.log(ss);
+				var blockStripForThisScale=[];
+
+				//show that not in convenient order
+				for (var cc of blocksforscales[ss]){
+					var xx = cc & 1023;
+					var yy = cc >> 10;
+					console.log("xx/ss: " + xx/ss + " , yy/ss: " + yy/ss);
+				}
+
+				var arrayofcombocoords = blocksforscales[ss];
+				for (var yy=0;yy<1024;yy+=ss){
+					var currentline = false;
+					for (var xx=0;xx<1024;xx+=ss){
+						var combocoordidx = (yy<<10) + xx;
+						if (arrayofcombocoords.indexOf(combocoordidx)!=-1){
+							if (currentline){
+								currentline.count++;
+							}else{
+								currentline = {combocoordstart:combocoordidx, count:1};
+							}
+						}else{
+							if (currentline){
+								blockStripForThisScale.push(currentline);
+							}
+							currentline = false;
+						}
+					}
+					if (currentline){
+						blockStripForThisScale.push(currentline);
+					}
+				}
+
+				blockStripsForScales[ss] = blockStripForThisScale;
+			}
+			return blockStripsForScales;
 		}
 
         return {
