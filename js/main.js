@@ -436,7 +436,7 @@ function drawTerrain(){
 		}
 	}else if(rendertype == 'morphing'){
 		renderQuadtree(scene.getQuadtree(), glDrawBlock);
-	}else{
+	}else if(rendertype == 'morphing-blockstrips'){
 		//block strips
 		drawDebugResults = [];
 
@@ -458,6 +458,11 @@ function drawTerrain(){
 		// for (var yy=0;yy<1024;yy+=32){
 		// 	glDrawBlock(yy, 0, 32, 32);
 		// }
+	}else if(rendertype == 'lowres'){
+		//draw small number of polygons. useful for checking baseline GPU usage, eg due to pix shader.
+		for (var yy=0;yy<1024;yy+=256){
+			glDrawBlock(yy, 0, 256, 4);
+		}
 	}
 
 
