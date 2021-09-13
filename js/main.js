@@ -5,6 +5,7 @@ var scene = (
     function(){
         var viewpointPos = {x:-100, y:0};
         var quadtree;
+		var blockStrips;
 
         document.getElementById("mycanvasoverlay").addEventListener('mousedown', (e) => {
             
@@ -27,8 +28,8 @@ var scene = (
 			renderQuadtree(quadtree, generateBlockInfo);
 			//console.log(blocksforscales);
 
-			var blockStrips = blockStripsFromBlockInfo(blocksforscales);
-			console.log(blockStrips);
+			blockStrips = blockStripsFromBlockInfo(blocksforscales);
+			// console.log(blockStrips);
 
 			return quadtree;
 		}
@@ -53,20 +54,20 @@ var scene = (
 			var blockStripsForScales={};
 			for (var ss of scales){
 				ss = Number.parseInt(ss);	//??
-				console.log(ss);
+				// console.log(ss);
 				var blockStripForThisScale=[];
 
 				//show that not in convenient order
-				for (var cc of blocksforscales[ss]){
-					var xx = cc & 1023;
-					var yy = cc >> 10;
-					console.log("xx/ss: " + xx/ss + " , yy/ss: " + yy/ss);
-				}
+				// for (var cc of blocksforscales[ss]){
+				// 	var xx = cc & 1023;
+				// 	var yy = cc >> 10;
+				// 	console.log("xx/ss: " + xx/ss + " , yy/ss: " + yy/ss);
+				// }
 
 				var arrayofcombocoords = blocksforscales[ss];
-				for (var yy=0;yy<1024;yy+=ss){
+				for (var xx=0;xx<1024;xx+=ss){
 					var currentline = false;
-					for (var xx=0;xx<1024;xx+=ss){
+					for (var yy=0;yy<1024;yy+=ss){
 						var combocoordidx = (yy<<10) + xx;
 						if (arrayofcombocoords.indexOf(combocoordidx)!=-1){
 							if (currentline){
@@ -97,6 +98,9 @@ var scene = (
             },
             getQuadtree: function(){
                 return quadtree;
+            },
+			getBlockStrips: function(){
+                return blockStrips;
             },
 			setPos
         }
@@ -430,17 +434,40 @@ function drawTerrain(){
 			
 			gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 		}
-	}else{
+	}else if(rendertype == 'morphing'){
 		renderQuadtree(scene.getQuadtree(), glDrawBlock);
+	}else{
+		//block strips
+		drawDebugResults = [];
+
+		var blockStrips = scene.getBlockStrips();
+		var scales = Object.keys(blockStrips);
+		for (var ss of scales){
+			// if (ss!=32){continue;}
+			var blocksForThisScale = blockStrips[ss];
+			for (var strip of blocksForThisScale){
+				var combocoordidx = strip.combocoordstart;
+				var xx = combocoordidx & 1023;
+				var yy = combocoordidx >> 10;
+				glDrawBlock(xx, yy, Number.parseInt(ss), strip.count);
+
+				drawDebugResults.push({xx,yy,ss:Number.parseInt(ss),count:strip.count});
+			}
+		}
+		//try drawing something predictable
+		// for (var yy=0;yy<1024;yy+=32){
+		// 	glDrawBlock(yy, 0, 32, 32);
+		// }
 	}
 
 
-	function glDrawBlock(xpos,ypos,size){
-		drawBlock(size*32/terrainSize, xpos/size, ypos/size);
+	function glDrawBlock(xpos,ypos,size, numblocks){
+		drawBlock(size*32/terrainSize, xpos/size, ypos/size, numblocks);
 	}
 
-	function drawBlock(downsizeAmount, xx, yy){
-	
+	function drawBlock(downsizeAmount, xx, yy, numblocks){
+		if (!numblocks){numblocks=1;}
+
 		gl.uniform1f(shaderProg.uniforms.uMorphScale, downsizeAmount/1024 );	//TODO draw blocks at each scale consecutively, so don't call this every block
 	
 		var shiftAmount = downsizeAmount*(xx*VERTS_PER_DIVISION + yy*32);
@@ -455,12 +482,13 @@ function drawTerrain(){
 		gl.bindBuffer(gl.ARRAY_BUFFER, bufferObj.vertexGradientMorphBuffer);
 		gl.vertexAttribPointer(shaderProg.attributes.aVertexGradientMorph, bufferObj.vertexGradientMorphBuffer.itemSize, gl.FLOAT, false, 8*downsizeAmount, 8*shiftAmount);
 
-		gl.drawElements(gl.TRIANGLE_STRIP, bufferObj.vertexIndexBuffer.numItems/32, gl.UNSIGNED_SHORT, 0);
+		gl.drawElements(gl.TRIANGLE_STRIP, numblocks*bufferObj.vertexIndexBuffer.numItems/32, gl.UNSIGNED_SHORT, 0);
 	}
 
 }
 
 
+var drawDebugResults;
 
 
 
