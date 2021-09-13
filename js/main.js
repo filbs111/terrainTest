@@ -121,13 +121,25 @@ var doUponTerrainInitialised = function(terrainHeightData){
 
 	var ctx = mycanvas.getContext("2d");
 
+	const arr = new Uint8ClampedArray(4*terrainSize*terrainSize);
+
+	var idx = 0;
 	for (var ii=0;ii<terrainSize;ii++){
-		for (var jj=0;jj<terrainSize;jj++){
-			var colour = Math.floor(Math.min(255,Math.max(0,128+(400*terrainHeightData.getxy(ii,jj)))));
-			ctx.fillStyle = "rgba("+colour+",0,"+(255-colour)+",1)";
-			ctx.fillRect(ii,jj,1,1);
+		for (var jj=0;jj<terrainSize;jj++,idx+=4){
+			var colour = Math.floor(Math.min(255,Math.max(0,128+(400*terrainHeightData.getxy(jj,ii)))));
+			arr[idx + 0] = colour;    // R value
+			arr[idx + 1] = 0;  // G value
+			arr[idx + 2] = 255-colour;    // B value
+			arr[idx + 3] = 255;  // A value
 		}
 	}
+
+	// Initialize a new ImageData object
+	let imageData = new ImageData(arr, terrainSize);
+
+	// Draw image data to the canvas
+	ctx.putImageData(imageData, 0, 0);
+
 
 	//this is a modified copy of data/gridData from 3sphere project
 
