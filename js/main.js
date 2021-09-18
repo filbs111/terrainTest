@@ -114,6 +114,8 @@ var overlayctx;
 
 var doUponTerrainInitialised = function(terrainHeightData){
 
+	timeLog("terrain initialisation callback");
+
 	//draw stuff to a canvas. acting on imagedata faster but fillrect quicker to code...
 	var mycanvas = document.getElementById("mycanvas");
 	mycanvas.width=terrainSize;
@@ -134,12 +136,15 @@ var doUponTerrainInitialised = function(terrainHeightData){
 		}
 	}
 
+	timeLog("generated canvas array");
+
 	// Initialize a new ImageData object
 	let imageData = new ImageData(arr, terrainSize);
 
 	// Draw image data to the canvas
 	ctx.putImageData(imageData, 0, 0);
 
+	timeLog("put image to canvas");
 
 	//this is a modified copy of data/gridData from 3sphere project
 
@@ -170,6 +175,9 @@ var doUponTerrainInitialised = function(terrainHeightData){
 				//vertices.push(0.03*Math.random());
 			}
 		}
+
+		timeLog("generated grid data part 1");
+
 		//console.log(vertex2dData);
 		//generate gradient/normal data.
 		for (var ii=0;ii<=gridSize;ii++){
@@ -178,6 +186,8 @@ var doUponTerrainInitialised = function(terrainHeightData){
 				grads.push(vertex2dData[ii][(jj+1)&terrainSizeMinusOne] - vertex2dData[ii][(jj-1)&terrainSizeMinusOne]);
 			}
 		}
+
+		timeLog("generated grid data grads");
 
 		//extra positions/grads for morphing LOD transition
 		var morphverts=[];
@@ -194,6 +204,8 @@ var doUponTerrainInitialised = function(terrainHeightData){
 			}
 		}
 		
+		timeLog("generated grid data morph verts");
+
 		//draw a strip of strips (big "strip" stripWidth wide, formed of gridSize* strips of stripWidth length, and width 1 )
 
 		var stripWidth = terrainSize/DIVISIONS;	//strip of strips	
@@ -210,10 +222,17 @@ var doUponTerrainInitialised = function(terrainHeightData){
 			bottomOfRowIdx++;
 		}
 
+		timeLog("generated grid data strips");
+
+
 		return {vertices, grads, morphverts, morphgrads, indices};
 	})(terrainSize);
 
-	initBuffers(gridData);	
+	timeLog("generated grid data");
+
+	initBuffers(gridData);
+	
+	timeLog("initialised buffers");
 }
 
 
@@ -546,5 +565,16 @@ mat4.rotateX(mvMatrix, -0.5);	//rads
 var camMatrix = mat4.create(mvMatrix);	//just setting mvMatrix to this, so could get away with 
 				//later may wish to alter mvMatrix (to position things in world)
 mat4.inverse(camMatrix);
+
+var timeLog = (function(){
+
+	var time = Date.now();
+
+	return function(description){
+		var timeNow = Date.now();
+		console.log("time log for: " + description + " t=" + timeNow + " (+ " + (timeNow - time));
+		time = timeNow;
+	}
+})();
 
 init();
