@@ -3,6 +3,14 @@ const MIN_SIZE = 32;
 // var MULTIPLIER = 1.5; //ensures that neighbouring LOD levels differ by at most 1
 const MULTIPLIER = 2.5;
 
+function shouldSplitEucledianDistance(x,y,size){
+    return Math.max(Math.abs(x), Math.abs(y)) < MULTIPLIER*size;
+}
+
+function shouldSplitEucledianWrap(x,y,size){
+    return Math.max(Math.abs((Math.abs(x)+512)%1024 -512), Math.abs((((Math.abs(y)+512)%1024) - 512) )) < MULTIPLIER*size;
+}
+
 function calculateQuadtree(viewpointPos, thisPart){
     //TODO put to obj so can extract quadtree for rendering, or provide some render() function
 
@@ -16,7 +24,7 @@ function calculateQuadtree(viewpointPos, thisPart){
     var xdisplacement = viewpointPos.x - centrex;
     var ydisplacement = viewpointPos.y - centrey;
 
-    var shouldSplit = Math.max(Math.abs(xdisplacement), Math.abs(ydisplacement)) < MULTIPLIER*thisPart.size;
+    var shouldSplit = shouldSplitEucledianWrap(xdisplacement, ydisplacement, thisPart.size);
 
     // shouldSplit = true;  //4096 nodes as expect ( (2048/32)^2 )
 
