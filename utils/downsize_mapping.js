@@ -40,7 +40,8 @@ function downsizePair(ii,jj){
     var bitmask = ~(coordOr- mappedOr);
     var mappedx = bitmask&ii;
     var mappedy = bitmask&jj;
-    return {mappedx, mappedy}
+    // return {mappedx, mappedy}
+    return mappedx*(1024+1) + mappedy;  //beware hardcoded grid size
 }
 
 function downsizePairPrint(ii,jj){

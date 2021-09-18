@@ -197,8 +197,7 @@ var doUponTerrainInitialised = function(terrainHeightData){
 
 		for (var ii=0;ii<=gridSize;ii++){
 			for (var jj=0;jj<=gridSize;jj++){
-				var {mappedx, mappedy} = downsizePair(ii,jj);
-				var mapped = mappedx*(gridSize+1) + mappedy;
+				var mapped = downsizePair(ii,jj);
 				morphverts[gridIdxV++]=vertices[mapped*3];
 				morphverts[gridIdxV++]=vertices[mapped*3+1];
 				morphverts[gridIdxV++]=vertices[mapped*3+2];
