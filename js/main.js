@@ -322,22 +322,6 @@ function drawScene(frameTime){
 	stats.get().end();
 	stats.get().begin();
 
-	var movementSpeed = 0.001;
-	//simple controls. TODO framerate dependent
-	var turnInput=-0.005*(keyThing.keystate(39)-keyThing.keystate(37)); //turn
-	var pitchInput=-0.005*(keyThing.keystate(40)-keyThing.keystate(38)); //pitch
-	var rollInput=-0.01*(keyThing.keystate(69)-keyThing.keystate(81));
-	var sideMove=-movementSpeed*(keyThing.keystate(65)-keyThing.keystate(68));	//lateral
-	var forwardMove=-movementSpeed*(keyThing.keystate(87)-keyThing.keystate(83));	//fwd/back
-	var unrotatedMoveVector = [sideMove,0,forwardMove];
-	
-	mat4.rotateY(camMatrix,turnInput);
-	mat4.rotateX(camMatrix,pitchInput);
-	mat4.rotateZ(camMatrix,rollInput);
-	mat4.translate(camMatrix, unrotatedMoveVector);
-
-	mat4.set(camMatrix,mvMatrix);
-	mat4.inverse(mvMatrix);
 
 	overlayctx.clearRect(0, 0, terrainSize, terrainSize);
 	overlayctx.fillStyle = "rgba(255, 255, 255, 0.5)";
@@ -365,7 +349,39 @@ function drawScene(frameTime){
 
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	drawTerrain();
+	var movementSpeed = 0.001;
+	//simple controls. TODO framerate dependent
+	var turnInput=-0.005*(keyThing.keystate(39)-keyThing.keystate(37)); //turn
+	var pitchInput=-0.005*(keyThing.keystate(40)-keyThing.keystate(38)); //pitch
+	var rollInput=-0.01*(keyThing.keystate(69)-keyThing.keystate(81));
+	var sideMove=-movementSpeed*(keyThing.keystate(65)-keyThing.keystate(68));	//lateral
+	var forwardMove=-movementSpeed*(keyThing.keystate(87)-keyThing.keystate(83));	//fwd/back
+	var unrotatedMoveVector = [sideMove,0,forwardMove];
+	
+	mat4.rotateY(camMatrix,turnInput);
+	mat4.rotateX(camMatrix,pitchInput);
+	mat4.rotateZ(camMatrix,rollInput);
+	mat4.translate(camMatrix, unrotatedMoveVector);
+
+	mat4.set(camMatrix,mvMatrix);
+	mat4.inverse(mvMatrix);
+
+
+	//draw grid of terrains. defaults to 1. larger currently ject for performance test. quadtree
+	//is reused so beyond 1st terrain, point of interest is not camera position. 
+	//will use this to check for seams when wrapping. current quadtree/ detail ranges will result in seams
+	//the below amounts to simply one drawTerrain(); call, if repeat-tiles is 1
+
+	var repeatTiles = document.getElementById("repeat-tiles").value;
+	var repeatTilesSeparation = document.getElementById("repeat-tiles-separation").value;
+
+	for (var aa=0;aa<repeatTiles;aa++){
+		for (var bb=0;bb<repeatTiles;bb++){
+			drawTerrain();
+			mat4.translate(mvMatrix,[repeatTilesSeparation,0,0]);
+		}
+		mat4.translate(mvMatrix,[-repeatTiles*repeatTilesSeparation,repeatTilesSeparation,0]);
+	}
 }
 
 var moveVel={x:1,y:1};
