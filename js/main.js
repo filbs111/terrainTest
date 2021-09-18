@@ -190,17 +190,20 @@ var doUponTerrainInitialised = function(terrainHeightData){
 		timeLog("generated grid data grads");
 
 		//extra positions/grads for morphing LOD transition
-		var morphverts=[];
-		var morphgrads=[];
+		var morphverts=new Array(gridSize*gridSize*3);
+		var morphgrads=new Array(gridSize*gridSize*2);
+		var gridIdxV=0;
+		var gridIdxG=0;
+
 		for (var ii=0;ii<=gridSize;ii++){
 			for (var jj=0;jj<=gridSize;jj++){
 				var {mappedx, mappedy} = downsizePair(ii,jj);
 				var mapped = mappedx*(gridSize+1) + mappedy;
-				morphverts.push(vertices[mapped*3]);
-				morphverts.push(vertices[mapped*3+1]);
-				morphverts.push(vertices[mapped*3+2]);
-				morphgrads.push(grads[mapped*2]);
-				morphgrads.push(grads[mapped*2+1]);
+				morphverts[gridIdxV++]=vertices[mapped*3];
+				morphverts[gridIdxV++]=vertices[mapped*3+1];
+				morphverts[gridIdxV++]=vertices[mapped*3+2];
+				morphgrads[gridIdxG++]=grads[mapped*2];
+				morphgrads[gridIdxG++]=grads[mapped*2+1];
 			}
 		}
 		
