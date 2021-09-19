@@ -7,10 +7,20 @@ function shouldSplitEucledianDistance(x,y,size){
     return Math.max(Math.abs(x), Math.abs(y)) < MULTIPLIER*size;
 }
 
+//TODO when using this, adapt morph shader
 function shouldSplitEucledianWrap(x,y,size){
     return Math.max(Math.abs((Math.abs(x)+512)%1024 -512), Math.abs((((Math.abs(y)+512)%1024) - 512) )) < MULTIPLIER*size;
 }
 
+//TODO when using this, adjust morph shader and shapes displayed on minimap.
+//maybe simplify bounding shape. diamond?
+function shouldSplitDuocylinderEffectiveDistance(x,y,size){ //ie distance in flat space where would appear at same size
+    var cosu = Math.cos(2*Math.PI * x/1024);
+    var cosv = Math.cos(2*Math.PI * y/1024);
+
+    //note picked 326 ~ 1024/PI out of hat
+    return 326 * Math.sqrt(1-(Math.pow( (cosu + cosv)/2 ,2))) < MULTIPLIER*size;
+}
 function calculateQuadtree(viewpointPos, thisPart){
     //TODO put to obj so can extract quadtree for rendering, or provide some render() function
 
@@ -24,7 +34,7 @@ function calculateQuadtree(viewpointPos, thisPart){
     var xdisplacement = viewpointPos.x - centrex;
     var ydisplacement = viewpointPos.y - centrey;
 
-    var shouldSplit = shouldSplitEucledianWrap(xdisplacement, ydisplacement, thisPart.size);
+    var shouldSplit = shouldSplitDuocylinderEffectiveDistance(xdisplacement, ydisplacement, thisPart.size);
 
     // shouldSplit = true;  //4096 nodes as expect ( (2048/32)^2 )
 
