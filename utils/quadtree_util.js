@@ -3,12 +3,12 @@ const MIN_SIZE = 32;
 // var MULTIPLIER = 1.5; //ensures that neighbouring LOD levels differ by at most 1
 const MULTIPLIER = 2.5;
 
-function shouldSplitEucledianDistance(x,y,size){
+function shouldSplitChebyshevDistance(x,y,size){
     return Math.max(Math.abs(x), Math.abs(y)) < MULTIPLIER*size;
 }
 
 //TODO when using this, adapt morph shader
-function shouldSplitEucledianWrap(x,y,size){
+function shouldSplitChebyshevWrap(x,y,size){
     return Math.max(Math.abs((Math.abs(x)+512)%1024 -512), Math.abs((((Math.abs(y)+512)%1024) - 512) )) < MULTIPLIER*size;
 }
 
