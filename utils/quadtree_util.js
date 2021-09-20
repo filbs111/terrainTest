@@ -19,8 +19,18 @@ function shouldSplitDuocylinderEffectiveDistance(x,y,size){ //ie distance in fla
     var cosv = Math.cos(2*Math.PI * y/1024);
 
     //note picked 326 ~ 1024/PI out of hat
+    //could speed up by square both sides
     return 326 * Math.sqrt(1-(Math.pow( (cosu + cosv)/2 ,2))) < MULTIPLIER*size;
 }
+function shouldSplitDuocylinder4DDistance(x,y,size){
+    var cosu = Math.cos(2*Math.PI * x/1024);
+    var cosv = Math.cos(2*Math.PI * y/1024);
+    var squaredDist = 2 - ( cosu + cosv );
+    //note 250 pulled out of hat
+    //could speed up by square both sides
+    return 250 * Math.sqrt(squaredDist) < MULTIPLIER*size;
+}
+
 function calculateQuadtree(viewpointPos, thisPart){
     //TODO put to obj so can extract quadtree for rendering, or provide some render() function
 
@@ -34,7 +44,7 @@ function calculateQuadtree(viewpointPos, thisPart){
     var xdisplacement = viewpointPos.x - centrex;
     var ydisplacement = viewpointPos.y - centrey;
 
-    var shouldSplit = shouldSplitDuocylinderEffectiveDistance(xdisplacement, ydisplacement, thisPart.size);
+    var shouldSplit = shouldSplitDuocylinder4DDistance(xdisplacement, ydisplacement, thisPart.size);
 
     // shouldSplit = true;  //4096 nodes as expect ( (2048/32)^2 )
 
