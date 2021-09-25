@@ -23,7 +23,9 @@ var bind2dTextureIfRequired = (function createBind2dTextureIfRequiredFunction(){
 			currentlyBoundTextures[texId] = null;
 		}
 
-		if (texToBind != currentlyBoundTextures[texId]){
+		//if (texToBind != currentlyBoundTextures[texId]){
+            //^^some bug with this. TODO fix.
+        if (true){
 			gl.activeTexture(texId);
 			gl.bindTexture(gl.TEXTURE_2D, texToBind);
 			currentlyBoundTextures[texId] = texToBind;

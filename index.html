@@ -10,16 +10,20 @@
 
 	attribute vec3 aVertexPosition;
 	attribute vec2 aVertexGradient;
+
 	uniform mat4 uMVMatrix;
 	uniform mat4 uPMatrix;
 	varying vec2 vPos;
 	varying vec2 vGrad;
+	varying vec2 vTexBlend;
 	
 	void main(void) {
 		vec4 transformedCoord = uMVMatrix * vec4(aVertexPosition,1.0);	//todo use 4x3 mat?
 		gl_Position = uPMatrix * transformedCoord;	
 		vPos = aVertexPosition.xy;
 		vGrad = 1024.0*aVertexGradient;	//should be muiltiplied by grid squares per unit.
+		float amountTexB = smoothstep (-0.01, 0.01, aVertexPosition.z);
+		vTexBlend = vec2(1.0-amountTexB, amountTexB);
 	}
 </script>
 
@@ -36,6 +40,7 @@
 	uniform float uMorphScale;
 	varying vec2 vPos;
 	varying vec2 vGrad;
+	varying vec2 vTexBlend;
 	
 	void main(void) {
 
@@ -67,6 +72,9 @@
 		
 		vPos = vertexBlended.xy;
 		vGrad = 1024.0*gradBlended;	//should be muiltiplied by grid squares per unit.
+
+		float amountTexB = smoothstep (-0.01, 0.01, vertexBlended.z);
+		vTexBlend = vec2(1.0-amountTexB, amountTexB);
 	}
 </script>
 
@@ -91,13 +99,18 @@
 	precision mediump float;
 
 	uniform sampler2D uSampler;
+	uniform sampler2D uSamplerB;
 	varying vec2 vPos;
 	varying vec2 vGrad;
+	varying vec2 vTexBlend;
 
 	void main(void){
 		//gl_FragColor=vec4(vec3(10.0*vColor.z + 0.1),1.0);
 
-		vec4 texColor = texture2D(uSampler, vPos * vec2(TEX_DOWNSCALE));
+		vec2 texCoord = vPos * vec2(TEX_DOWNSCALE);
+		vec4 texColor = texture2D(uSampler, texCoord);
+		vec4 texColorB = texture2D(uSamplerB, texCoord);
+		vec4 texColorBlend = vTexBlend.x * texColor + vTexBlend.y * texColorB;
 
 		vec3 norm = normalize(vec3(vGrad, 1.0));
 		//float lighting = dot(norm, vec3(0.0,0.0,1.0));
@@ -105,7 +118,7 @@
 		float lighting = max( dot(norm, directionToSun), 0.0 );
 		float postGammaLighting = pow(lighting, 0.455);
 
-		gl_FragColor=texColor * vec4(vec3(postGammaLighting), 1.0);
+		gl_FragColor= texColorBlend * vec4(vec3(postGammaLighting), 1.0);
 	}
 </script>
 
@@ -156,6 +169,7 @@
 <script type="text/javascript" src="utils/downsize_mapping.js"></script>
 <script type="text/javascript" src="utils/terrain_utils.js"></script>
 <script type="text/javascript" src="utils/quadtree_util.js"></script>
+<script type="text/javascript" src="utils/texture_util.js"></script>
 <script type="text/javascript" src="js/main.js"></script>
 
 </html>

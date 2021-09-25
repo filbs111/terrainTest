@@ -96,7 +96,7 @@ var loadHeightmapTerrain = function(terrainSize, cb){
         if (arrayBuffer) {
             var sixteenBitArray = new Uint16Array(arrayBuffer);
             for (var ii = 0; ii < sixteenBitArray.byteLength; ii++) {
-                terrainHeightData[ii] = 0.00001*sixteenBitArray[ii] - 0.3;
+                terrainHeightData[ii] = 0.000005*sixteenBitArray[ii] - 0.2;
             }
 
             console.log("loaded terrain data into array. t= " + (Date.now()-startTime));

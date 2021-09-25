@@ -259,11 +259,14 @@ var switchShader= (function(){
 		prepBuffersForDrawing(terrainBuffer, shader);
 
 		bind2dTextureIfRequired(texture);
+		bind2dTextureIfRequired(textureB, gl.TEXTURE1);
+
 	}
 
 })();
 
 var texture;
+var textureB;
 
 function init(){
 	initGL();
@@ -273,7 +276,8 @@ function init(){
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 	initShaders();
-	texture = makeTexture("img/3.png",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);
+	texture = makeTexture("img/1.png",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);
+	textureB = makeTexture("img/3.png",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);
 
 	// createDiamondSquareTerrain(terrainSize, doUponTerrainInitialised);
 	loadHeightmapTerrain(terrainSize, doUponTerrainInitialised);
@@ -302,11 +306,11 @@ var shaderPrograms={};
 function initShaders(){
 	shaderPrograms.simple = loadShader( "shader-simple-vs", "shader-textured-fs",{
 		attributes:["aVertexPosition", "aVertexGradient"],
-		uniforms:["uMVMatrix","uPMatrix","uSampler"]
+		uniforms:["uMVMatrix","uPMatrix","uSampler","uSamplerB"]
 		});
 	shaderPrograms.morph = loadShader( "shader-morph-vs", "shader-textured-fs",{
 		attributes:["aVertexPosition", "aVertexMorph", "aVertexGradient", "aVertexGradientMorph"],
-		uniforms:["uMVMatrix","uPMatrix","uSampler","uCentrePos","uMorphScale"]
+		uniforms:["uMVMatrix","uPMatrix","uSampler","uSamplerB","uCentrePos","uMorphScale"]
 		});
 }
 var terrainBuffer={};
@@ -435,6 +439,9 @@ function drawTerrain(){
 	gl.uniformMatrix4fv(shaderProg.uniforms.uPMatrix, false, pMatrix);
 	gl.uniformMatrix4fv(shaderProg.uniforms.uMVMatrix, false, mvMatrix);
 	
+	gl.uniform1i(shaderProg.uniforms.uSampler, 0);
+	gl.uniform1i(shaderProg.uniforms.uSamplerB, 1);
+
 	var bufferObj = terrainBuffer;
 
 	//var downsizeAmount = 1 << parseInt(document.getElementById("scaleslider").value);
