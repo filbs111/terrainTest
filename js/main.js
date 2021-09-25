@@ -260,6 +260,7 @@ var switchShader= (function(){
 
 		bind2dTextureIfRequired(texture);
 		bind2dTextureIfRequired(textureB, gl.TEXTURE1);
+		bind2dTextureIfRequired(textureNormals, gl.TEXTURE2);
 
 	}
 
@@ -267,6 +268,7 @@ var switchShader= (function(){
 
 var texture;
 var textureB;
+var textureNormals;
 
 function init(){
 	initGL();
@@ -278,6 +280,8 @@ function init(){
 	initShaders();
 	texture = makeTexture("img/1.png",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);
 	textureB = makeTexture("img/3.png",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);
+	textureNormals = makeTexture("img/normals1024.png",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);	//TODO format better suited for normal maps
+		//TODO auto generate normal map from heightmap data
 
 	// createDiamondSquareTerrain(terrainSize, doUponTerrainInitialised);
 	loadHeightmapTerrain(terrainSize, doUponTerrainInitialised);
@@ -306,11 +310,11 @@ var shaderPrograms={};
 function initShaders(){
 	shaderPrograms.simple = loadShader( "shader-simple-vs", "shader-textured-fs",{
 		attributes:["aVertexPosition", "aVertexGradient"],
-		uniforms:["uMVMatrix","uPMatrix","uSampler","uSamplerB"]
+		uniforms:["uMVMatrix","uPMatrix","uSampler","uSamplerB","uSamplerNormals"]
 		});
 	shaderPrograms.morph = loadShader( "shader-morph-vs", "shader-textured-fs",{
 		attributes:["aVertexPosition", "aVertexMorph", "aVertexGradient", "aVertexGradientMorph"],
-		uniforms:["uMVMatrix","uPMatrix","uSampler","uSamplerB","uCentrePos","uMorphScale"]
+		uniforms:["uMVMatrix","uPMatrix","uSampler","uSamplerB","uSamplerNormals","uCentrePos","uMorphScale"]
 		});
 }
 var terrainBuffer={};
@@ -441,6 +445,7 @@ function drawTerrain(){
 	
 	gl.uniform1i(shaderProg.uniforms.uSampler, 0);
 	gl.uniform1i(shaderProg.uniforms.uSamplerB, 1);
+	gl.uniform1i(shaderProg.uniforms.uSamplerNormals, 2);
 
 	var bufferObj = terrainBuffer;
 
