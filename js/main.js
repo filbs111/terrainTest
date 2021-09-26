@@ -19,6 +19,16 @@ var scene = (
         });
 
 		function setPos(xx,yy,zz){
+
+			//TODO splitpos upon changing function
+			var quadtreeoption = document.getElementById("quadtree-splitfunc").value;
+			if (quadtreeoption == "a"){
+				quadtreeSplitFunc = shouldSplitDuocylinder4DDistance;
+			}else if (quadtreeoption == "b"){
+				quadtreeSplitFunc = shouldSplitDuocylinder4DDistanceB;
+			}
+			
+
 			viewpointPos.x = xx;
 			viewpointPos.y = yy;
 			viewpointPos.z = zz;
