@@ -27,14 +27,43 @@ function shouldSplitCompoundWrap(x,y,z,size){
 }
 
 //TODO when using this, adjust morph shader and shapes displayed on minimap.
-//maybe simplify bounding shape. diamond?
-function shouldSplitDuocylinderEffectiveDistance(x,y,size){ //ie distance in flat space where would appear at same size
+//maybe simplify bounding shape. diamond? however, for camera position above/below surface, rectangular
+//regions will make sense.
+//also, note that quadtree should be symmetric in (+1/2, +1/2) transformation, so having 2 diamond landscapes instead of 1 square,
+//with same quadtrees, may make sense.
+function shouldSplitDuocylinderEffectiveDistance(x,y,z,size){ //ie distance in flat space where would appear at same size
+    //todo include z in calculation (currently behaves as if z=0)
     var cosu = Math.cos(2*Math.PI * x/1024);
     var cosv = Math.cos(2*Math.PI * y/1024);
 
     //note picked 326 ~ 1024/PI out of hat
     //could speed up by square both sides
-    return 326 * Math.sqrt(1-(Math.pow( (cosu + cosv)/2 ,2))) < MULTIPLIER*size;
+    return 220 * Math.sqrt(1-(Math.pow( (cosu + cosv)/2 ,2))) < MULTIPLIER*size;
+}
+function shouldSplitDuocylinderEffectiveDistanceB(x,y,z,size){ //ie distance in flat space where would appear at same size
+    //alternative implementation to check other one works.
+    //calculate the two points (camera and on surface), take dot product.
+    // cos(ang) = dot product
+    // sin(theta) = effective distance
+    // => sqrt(1- dot prod squared)
+    
+    var theta = Math.PI/4 + z/500;
+    var cameraPos = {x:Math.cos(theta), y:0, z:Math.sin(theta), w:0};
+
+    //other point is height 0, some map coords
+    var angleX= 2*Math.PI * x/1024;
+    var angleY= 2*Math.PI * y/1024;
+
+    var oneOverRoot2 = Math.sqrt(0.5);
+    var pointPos = {x:oneOverRoot2*Math.cos(angleX), y:oneOverRoot2*Math.sin(angleX),
+        z:oneOverRoot2*Math.cos(angleY), w:oneOverRoot2*Math.sin(angleY)};
+
+    var dotProd = pointPos.x*cameraPos.x + pointPos.y*cameraPos.y + pointPos.z*cameraPos.z + pointPos.w*cameraPos.w;
+    var effdistsq = 1 - dotProd*dotProd;
+
+    //note picked 326 ~ 1024/PI out of hat
+    //could speed up by square both sides
+    return 220 * Math.sqrt(effdistsq) < MULTIPLIER*size;
 }
 function shouldSplitDuocylinder4DDistance(x,y,z,size){
     //todo include z in calculation (currently behaves as if z=0)
@@ -52,7 +81,7 @@ function shouldSplitDuocylinder4DDistanceB(x,y,z,size){
     //camera point is above surface by z, at 0,0
     //say, on the line y=w=0, x=cos(theta), z=sin(theta), where theta = PI/2 for height =0, theta=0 for height minimum, theta=
     //PI for height maximum. input z here is not well defined - could be theta - PI/4 . doesn't really matter
-    var theta = Math.PI/4 + z/1024;
+    var theta = Math.PI/4 + z/500;
     var cameraPos = {x:Math.cos(theta), y:0, z:Math.sin(theta), w:0};
 
     //other point is height 0, some map coords
@@ -85,7 +114,7 @@ function calculateQuadtree(viewpointPos, thisPart){
     var xdisplacement = viewpointPos.x - centrex;
     var ydisplacement = viewpointPos.y - centrey;
 
-    var shouldSplit = shouldSplitDuocylinder4DDistanceB(xdisplacement, ydisplacement, viewpointPos.z, thisPart.size);
+    var shouldSplit = shouldSplitDuocylinderEffectiveDistanceB(xdisplacement, ydisplacement, viewpointPos.z, thisPart.size);
 
     // shouldSplit = true;  //4096 nodes as expect ( (2048/32)^2 )
 
