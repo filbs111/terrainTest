@@ -3,13 +3,27 @@ const MIN_SIZE = 32;
 // var MULTIPLIER = 1.5; //ensures that neighbouring LOD levels differ by at most 1
 const MULTIPLIER = 2.5;
 
-function shouldSplitChebyshevDistance(x,y,size){
-    return Math.max(Math.abs(x), Math.abs(y)) < MULTIPLIER*size;
+function shouldSplitChebyshevDistance(x,y,z,size){
+    return Math.max(Math.abs(x), Math.abs(y), Math.abs(z)) < MULTIPLIER*size;
+}
+
+function shouldSplit3dDistance(x,y,z,size){
+    return Math.sqrt(x*x + y*y + z*z) < MULTIPLIER*size;    //note could square both sides
+}
+
+function shouldCompoundDistance(x,y,z,size){
+    var chebyXY = Math.max(Math.abs(x), Math.abs(y));
+    return Math.sqrt( chebyXY*chebyXY + z*z) < MULTIPLIER*size;    //note could square both sides
 }
 
 //TODO when using this, adapt morph shader
-function shouldSplitChebyshevWrap(x,y,size){
-    return Math.max(Math.abs((Math.abs(x)+512)%1024 -512), Math.abs((((Math.abs(y)+512)%1024) - 512) )) < MULTIPLIER*size;
+function shouldSplitChebyshevWrap(x,y,z,size){
+    return Math.max(Math.abs((Math.abs(x)+512)%1024 -512), Math.abs((((Math.abs(y)+512)%1024) - 512) ), Math.abs(z)) < MULTIPLIER*size;
+}
+
+function shouldSplitCompoundWrap(x,y,z,size){
+    var chebyXY = Math.max(Math.abs((Math.abs(x)+512)%1024 -512), Math.abs((((Math.abs(y)+512)%1024) - 512)));
+    return Math.sqrt( chebyXY*chebyXY + z*z) < MULTIPLIER*size;
 }
 
 //TODO when using this, adjust morph shader and shapes displayed on minimap.
@@ -22,7 +36,7 @@ function shouldSplitDuocylinderEffectiveDistance(x,y,size){ //ie distance in fla
     //could speed up by square both sides
     return 326 * Math.sqrt(1-(Math.pow( (cosu + cosv)/2 ,2))) < MULTIPLIER*size;
 }
-function shouldSplitDuocylinder4DDistance(x,y,size){
+function shouldSplitDuocylinder4DDistance(x,y,z,size){
     var cosu = Math.cos(2*Math.PI * x/1024);
     var cosv = Math.cos(2*Math.PI * y/1024);
     var squaredDist = 2 - ( cosu + cosv );
@@ -44,7 +58,7 @@ function calculateQuadtree(viewpointPos, thisPart){
     var xdisplacement = viewpointPos.x - centrex;
     var ydisplacement = viewpointPos.y - centrey;
 
-    var shouldSplit = shouldSplitDuocylinder4DDistance(xdisplacement, ydisplacement, thisPart.size);
+    var shouldSplit = shouldSplitCompoundWrap(xdisplacement, ydisplacement, viewpointPos.z, thisPart.size);
 
     // shouldSplit = true;  //4096 nodes as expect ( (2048/32)^2 )
 

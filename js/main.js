@@ -3,7 +3,7 @@ var centrePos = [0.5,0.5];
 //quadtree stuff
 var scene = (
     function(){
-        var viewpointPos = {x:-100, y:0};
+        var viewpointPos = {x:-100, y:0, z:0};
         var quadtree;
 		var blockStrips;
 
@@ -12,14 +12,16 @@ var scene = (
 			var rect = e.target.getBoundingClientRect();
 			viewpointPos.x = e.clientX - rect.left; //x position within the element.
 			viewpointPos.y = e.clientY - rect.top;
+			viewpointPos.z = Number.parseInt(document.getElementById("height-slider").value);
 
-            setPos(viewpointPos.x, viewpointPos.y);
+            setPos(viewpointPos.x, viewpointPos.y, viewpointPos.z);
 			console.log(quadtree);
         });
 
-		function setPos(xx,yy){
+		function setPos(xx,yy,zz){
 			viewpointPos.x = xx;
 			viewpointPos.y = yy;
+			viewpointPos.z = zz;
 			centrePos = [viewpointPos.x/terrainSize, viewpointPos.y/terrainSize];
             quadtree = calculateQuadtree(viewpointPos, {xpos:0, ypos:0, size:terrainSize});
 
@@ -426,7 +428,7 @@ function drawTerrain(){
 	if (!terrainBuffer.isInitialised){return;}
 
 	if (document.getElementById("automove").checked){
-		scene.setPos(camMatrix[12]*terrainSize, camMatrix[13]*terrainSize);
+		scene.setPos(camMatrix[12]*terrainSize, camMatrix[13]*terrainSize, camMatrix[14]*terrainSize);
 	}
 
 	var rendertype = document.getElementById("rendertype").value;
