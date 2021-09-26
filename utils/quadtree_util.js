@@ -37,9 +37,36 @@ function shouldSplitDuocylinderEffectiveDistance(x,y,size){ //ie distance in fla
     return 326 * Math.sqrt(1-(Math.pow( (cosu + cosv)/2 ,2))) < MULTIPLIER*size;
 }
 function shouldSplitDuocylinder4DDistance(x,y,z,size){
+    //todo include z in calculation (currently behaves as if z=0)
     var cosu = Math.cos(2*Math.PI * x/1024);
     var cosv = Math.cos(2*Math.PI * y/1024);
     var squaredDist = 2 - ( cosu + cosv );
+    //note 250 pulled out of hat
+    //could speed up by square both sides
+    return 250 * Math.sqrt(squaredDist) < MULTIPLIER*size;
+}
+function shouldSplitDuocylinder4DDistanceB(x,y,z,size){
+    //alternative implementation to check other one works.
+    //calculate the two points (camera and on surface), take distance.
+
+    //camera point is above surface by z, at 0,0
+    //say, on the line y=w=0, x=cos(theta), z=sin(theta), where theta = PI/2 for height =0, theta=0 for height minimum, theta=
+    //PI for height maximum. input z here is not well defined - could be theta - PI/4 . doesn't really matter
+    var theta = Math.PI/4 + z/1024;
+    var cameraPos = {x:Math.cos(theta), y:0, z:Math.sin(theta), w:0};
+
+    //other point is height 0, some map coords
+    var angleX= 2*Math.PI * x/1024;
+    var angleY= 2*Math.PI * y/1024;
+
+    var oneOverRoot2 = Math.sqrt(0.5);
+    var pointPos = {x:oneOverRoot2*Math.cos(angleX), y:oneOverRoot2*Math.sin(angleX),
+        z:oneOverRoot2*Math.cos(angleY), w:oneOverRoot2*Math.sin(angleY)};
+
+    var difference = {x:pointPos.x-cameraPos.x,y:pointPos.y-cameraPos.y,z:pointPos.z-cameraPos.z,w:pointPos.w-cameraPos.w};
+
+    var squaredDist = difference.x*difference.x + difference.y*difference.y + difference.z*difference.z + difference.w*difference.w;
+
     //note 250 pulled out of hat
     //could speed up by square both sides
     return 250 * Math.sqrt(squaredDist) < MULTIPLIER*size;
@@ -58,7 +85,7 @@ function calculateQuadtree(viewpointPos, thisPart){
     var xdisplacement = viewpointPos.x - centrex;
     var ydisplacement = viewpointPos.y - centrey;
 
-    var shouldSplit = shouldSplitCompoundWrap(xdisplacement, ydisplacement, viewpointPos.z, thisPart.size);
+    var shouldSplit = shouldSplitDuocylinder4DDistanceB(xdisplacement, ydisplacement, viewpointPos.z, thisPart.size);
 
     // shouldSplit = true;  //4096 nodes as expect ( (2048/32)^2 )
 
