@@ -22,7 +22,11 @@ var scene = (
 
 			//TODO splitpos upon changing function
 			var quadtreeoption = document.getElementById("quadtree-splitfunc").value;
-			if (quadtreeoption == "a"){
+			if (quadtreeoption == "effective-a"){
+				quadtreeSplitFunc = shouldSplitDuocylinderEffectiveDistance;
+			}else if (quadtreeoption == "effective-b"){	
+				quadtreeSplitFunc = shouldSplitDuocylinderEffectiveDistanceB;
+			}else if (quadtreeoption == "a"){
 				quadtreeSplitFunc = shouldSplitDuocylinder4DDistance;
 			}else if (quadtreeoption == "b"){
 				quadtreeSplitFunc = shouldSplitDuocylinder4DDistanceB;

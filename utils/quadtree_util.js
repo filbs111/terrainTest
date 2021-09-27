@@ -33,12 +33,16 @@ function shouldSplitCompoundWrap(x,y,z,size){
 //with same quadtrees, may make sense.
 function shouldSplitDuocylinderEffectiveDistance(x,y,z,size){ //ie distance in flat space where would appear at same size
     //todo include z in calculation (currently behaves as if z=0)
+    var alpha = Math.PI/4 + z/500;
+    var cosa = Math.cos(alpha);
+    var sina = Math.sin(alpha);
+
     var cosu = Math.cos(2*Math.PI * x/1024);
     var cosv = Math.cos(2*Math.PI * y/1024);
 
     //note picked 326 ~ 1024/PI out of hat
     //could speed up by square both sides
-    return 220 * Math.sqrt(1-(Math.pow( (cosu + cosv)/2 ,2))) < MULTIPLIER*size;
+    return 220 * Math.sqrt(1-0.5*(Math.pow( cosa*cosu + sina*cosv ,2))) < MULTIPLIER*size;
 }
 function shouldSplitDuocylinderEffectiveDistanceB(x,y,z,size){ //ie distance in flat space where would appear at same size
     //alternative implementation to check other one works.
