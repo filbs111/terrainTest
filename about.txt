@@ -1,0 +1,189 @@
+
+notes re (effective) distance functions for quadtree splitting. TODO tidy
+
+------------------------------------
+
+for some u,v on duocylinder:
+
+x^2 + y^2 = z^2 +w^2 =0.5
+
+let 1/root(2) = R (~0.7)
+RR = R^2 = 1/2 = 0.5
+
+x = Rcos(u), y = Rsin(u)
+z = Rcos(v), w = Rsin(v)
+
+for quadtree, might care about total distance, or "angle" (ie with latter, high detail also on opposite side of world)
+
+squared distance between some point u,v from some other point?
+
+(Rcos(u1) - Rcos(u2))^2 + ....
+
+
+= 2 - ( cos(u1)cos(u2) + sin(u2)sin(u1) + cos(v1)cos(v2) + sin(v2)sin(v1) )
+
+
+using compound angle formula
+cos(A + B) = cosAcosB - sinAsinB
+
+= 2 -( cos( u1-u2) + cos (v1 - v2)) 
+
+which seems sensible. 0 where u1=u2, v1=v2, 4 (=2*2) where u1 opposite u2, v1 opposite v2.
+
+----
+what about if viewpoint above/below surface?
+
+suppose point has some "h" that determines 4-position.
+x = cos(PI/4 + h), y=0, z= sin(PI/4 + h), w=0
+
+other point, using u,v relative to u,v of viewpoint (ie u1-u2, v1-v2)
+
+x = Rcos(u), y = Rsin(u), z = Rcos(v), w = Rsin(v)
+
+difference: 
+let a = PI/4 + h
+
+x: Rcosu - cosa
+y: Rsinu
+z: Rcosv - sina
+w: Rsinv
+
+distance : RRcos2u + RRsin2u - 2Rcosucosa + cos2a +  RRcos2v + RRsin2v - 2Rcosvsina + sin2a
+ = 2RR - 2Rcosucosa - 2Rcosvsina + 1
+ = 2 ( 1- Rcosucosa - Rcosvsina )
+ 
+ which stacks up with original version (where h=0 so cosa = sina = R)
+
+
+----
+
+for effective distance determnining size in view? ...
+
+length (a - b(a.b)) , or length (b - a(a.b))
+
+a.b = RRcos(u1)cos(u2) + ....
+
+using double angle formula
+
+a.b = RR (cos(u1-u2) + cos(v1-v2))
+	= 0.5 (cos(u1-u2) + cos(v1-v2))
+
+a - b (a.b) = 
+x:  Rcos(u1) - 0.5 Rcos(u2) (cos(u1-u2) + cos(v1-v2))
+x*x:  0.5cos^2(u1) - 0.5cos(u1)cos(u2) (cos(u1-u2) + cos(v1-v2)) + 0.125 (cos(u1-u2) + cos(v1-v2))^2
+
+y: (swap above cos for sins)  Rsin(u1) - 0.5 Rsin(u2) (cos(u1-u2) + cos(v1-v2))
+y*y: = 0.5sin^2(u1) - 0.5sin(u1)sin(u2) (cos(u1-u2) + cos(v1-v2)) + 0.125 (cos(u1-u2) + cos(v1-v2))^2
+
+xx+yy =  0.5 -0.5 ( cos(u1)cos(u2) + sin(u1)sin(u2) ) (cos(u1-u2) + cos(v1-v2))  + 0.125 (cos(u1-u2) + cos(v1-v2))^2
+
+use double angle... cos(u1)cos(u2) + sin(u1)sin(u2)  =  cos( u1-u2) 
+
+0.5 -0.5 cos(u1-u2) (cos(u1-u2) + cos(v1-v2))  + 0.125 (cos(u1-u2) + cos(v1-v2))^2		(1)
+
+then add similar terms for y,z 
+0.5 -0.5 cos(v1-v2) (cos(u1-u2) + cos(v1-v2))  + 0.125 (cos(u1-u2) + cos(v1-v2))^2		(2)
+
+sum (1), (2)
+1 - 0.5(  cos(u1-u2) + cos(v1-v2) ) (cos(u1-u2) + cos(v1-v2))  + 0.125 (cos(u1-u2) + cos(v1-v2))^2	
+
+= 1- 0.375 (  cos(u1-u2) + cos(v1-v2) )^2
+
+suspect made some mistake. 1- 0.25 * ...
+
+
+to simplify maths, notice that everything is u2-u1 etc. let u1=0, u2=u...
+
+centre point (0,0)
+x = R, y=0, z=R, w=0;
+
+other point(u,v)
+x = Rcosu, y=Rsinu, z=Rcosv, w=Rsinv
+
+dot product:
+R^2 cosu + R^2 cosv
+= 0.5 (cosu + cosv)		**********
+																			correction
+a - b(a.b)  ?
+R (cosu, sinu, cosv, sinv) - 0.5 R (cosu + cosv) ( 1,0,1,0)					
+= R ( cosu - 0.5 ,  sinu , cosv - 0.5 , sinv )								= R ( cosu - 0.5*(cosu + cosv),  sinu , cosv - 0.5*(cosu + cosv) , sinv )		
+																			= R ( 0.5 (cosu-cosv), sinu, 0.5*(cosv-cosu), sinv)
+xx+yy+zz+ww=  R^2 ( c^2u - cu +0.25 + s^2u + same for v						= RR ( 0.5 * (c^2u + c^2v - 2cucv) + s^2u +s^2v ) 
+ = R^2 ( 2.5 - cu - cv ) 													= RR ( 0.5 * ( 1 + 1 - 2cucv) + 0.5*(s^2u + s^2v))
+																			= RR ( 1 - cucv + 0.5 ( 1 - c^2u + 1 - c^2v))
+																			= RR ( 1+1 - cucv - 0.5 ( c^2u + c^2v))
+																			= RR ( 2 - 0.5 ( 2cucv + c^2u + c^2v ))
+																			= RR ( 2 - 0.5 (cu + cv)^2 ) 
+																			= RRRR ( 4 - (cu + cv)^2)
+																			
+																			sqrt of this: RR root( 4-(cu + cv)^2) 
+																			or root( 1- 0.25*(cu + cv)^2)
+																			or root(1-((cu + cv)/2)^2)		**********
+
+
+b - a(a.b) ? 
+R ( 1,0,1,0) - 0.5 R (cosu + cosv) (cosu, sinu, cosv, sinv)
+= R ( 1 - 0.5 cosu , -0.5sinu , 1 - 0.5 cosv , -0.5sinv )
+xx+yy+zz+ww= R^2 ( 1 - cu + 0.25c^2u + 0.25 s^2u + same for v
+ = R^2 ( 2 + 0.5 - cu - cv ) 
+ which is the same...
+ 
+-> distance = root this = R sqrt(2.5 - cu - cv)
+which seems off - want to go to 0 for cu=cv=1
+
+-----------------
+repeat with "centre point" at some height.	PI/4+h = alpha		x = cos(alpha), y=0, z= sin(alpha), w=0
+
+other point(u,v):												x = Rcosu, y=Rsinu, z=Rcosv, w=Rsinv
+	
+dot product:	Rcosacosu + Rsinacosv
+
+a - b(a.b)  :
+R (cosu, sinu, cosv, sinv) - R (cosacosu + sinacosv) ( cosa,0,sina,0)					
+
+=R ( cosu - cos2acosu - sinacosacosv , sinu , cosv - cosasinacosu - sin2acosv, sinv)
+
+xx+yy+zz+ww= RR ( cos2u + cos4acos2u + sin2acos2acos2v - 2cos2ucos2a - 2sinacosacosucosv + 2cos3acosusinacosv
+				sin2u + 
+				cos2v + cos2asin2acos2u + sin4acos2v - 2cosvcosasinacosu - 2cos2vsin2a + 2cosasin3acosucosv + 
+				sin2v
+
+	= RR ( 2 + cos4acos2u + sin2acos2acos2v - 2cos2ucos2a - 2sinacosacosucosv + 2cos3acosusinacosv + 
+				cos2asin2acos2u + sin4acos2v - 2cosvcosasinacosu - 2cos2vsin2a + 2cosasin3acosucosv ) 
+
+= RR ( 2 + cos4acos2u + sin2acos2acos2v - 2cos2ucos2a - 2sinacosacosucosv + cos2a*(2cosacosusinacosv) + 
+				cos2asin2acos2u + sin4acos2v - 2cosvcosasinacosu - 2cos2vsin2a + sin2a*(2cosasinacosucosv) ) 
+
+= RR ( 2 + 2cosacosusinacosv
+			+ cos4acos2u + sin2acos2acos2v - 2cos2ucos2a - 2sinacosacosucosv +
+			cos2asin2acos2u + sin4acos2v - 2cosvcosasinacosu - 2cos2vsin2a )
+			
+= RR ( 2 + 2cosacosusinacosv
+			+ cos4acos2u + sin2acos2acos2v - 2cos2ucos2a - 4sinacosacosucosv +
+			cos2asin2acos2u + sin4acos2v - 2cos2vsin2a )
+			
+	= RR ( 2 + 2cosacosusinacosv + sin2acos2v +
+			cos4acos2u  - 2cos2ucos2a - 4sinacosacosucosv +
+			cos2asin2acos2u  - 2cos2vsin2a )
+			
+	= RR ( 2 + 2cosacosusinacosv + sin2acos2v + cos2acos2u
+			  - 2cos2ucos2a - 4sinacosacosucosv +
+			  - 2cos2vsin2a )
+			  
+	= RR ( 2 - 2cosacosusinacosv + sin2acos2v + cos2acos2u
+			  - 2cos2ucos2a
+			  - 2cos2vsin2a )
+			  
+		= RR ( 2 - 2cosacosusinacosv + sin2acos2v
+			  - cos2ucos2a
+			  - 2cos2vsin2a )
+			  
+	= RR ( 2 - 2cosacosusinacosv
+			  - cos2ucos2a
+			  - cos2vsin2a )
+			  
+	= RR ( 2 - ( cosucosa + cosvsina )^2 )
+
+(then take square root to get effective distance)
+
+matches h=0 case, because these cosa = sina = 1/root2
