@@ -1,141 +1,11 @@
 <html>
 
 <head>
-
 <title>WebGL Terrain Test</title>
-
 <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
-
-<script id="shader-simple-vs" type="x-shader/x-vertex">
-
-	attribute vec3 aVertexPosition;
-	attribute vec2 aVertexGradient;
-
-	uniform mat4 uMVMatrix;
-	uniform mat4 uPMatrix;
-	varying vec2 vPos;
-	varying vec2 vGrad;
-	varying vec2 vTexBlend;
-	
-	void main(void) {
-		vec4 transformedCoord = uMVMatrix * vec4(aVertexPosition,1.0);	//todo use 4x3 mat?
-		gl_Position = uPMatrix * transformedCoord;	
-		vPos = aVertexPosition.xy;
-		vGrad = 1024.0*aVertexGradient;	//should be muiltiplied by grid squares per unit.
-		float amountTexB = smoothstep (-0.01, 0.01, aVertexPosition.z);
-		vTexBlend = vec2(1.0-amountTexB, amountTexB);
-	}
-</script>
-
-<script id="shader-morph-vs" type="x-shader/x-vertex">
-
-	attribute vec3 aVertexPosition;
-	attribute vec3 aVertexMorph;
-	attribute vec2 aVertexGradient;
-	attribute vec2 aVertexGradientMorph;
-	//attribute vec3 aVertexNormal;
-	uniform mat4 uMVMatrix;
-	uniform mat4 uPMatrix;
-	uniform vec2 uCentrePos;
-	uniform float uMorphScale;
-	varying vec2 vPos;
-	varying vec2 vGrad;
-	varying vec2 vTexBlend;
-	
-	void main(void) {
-
-		vec2 absDist = abs(aVertexPosition.xy - uCentrePos);
-
-		//Chebyshev distance
-		float distFromCentre = max(absDist.x, absDist.y);
-		//float transitionRange = 128.0*uMorphScale;
-		//float transitionRangeB = 96.0*uMorphScale;	//lowest possible, for 
-		//float transitionWidth = 32.0*uMorphScale;	//greatest possible transition width
-
-		float transitionRangeB = 112.0*uMorphScale;	//push transition out further
-		float transitionWidth = 16.0*uMorphScale;
-
-		float morphContinuous = clamp((distFromCentre - transitionRangeB)/ transitionWidth , 0.0, 1.0);
-
-		vec2 modvec = mod(aVertexPosition.xy - vec2(uMorphScale) , 2.0*uMorphScale) - vec2(uMorphScale);
-		modvec/=uMorphScale;	//normalise
-		float lensq = dot(modvec, modvec);
-		float stepped = step(0.1, lensq);	//number doesn't matter much
-		float blendAmount = stepped*morphContinuous;
-
-		vec3 vertexBlended = blendAmount*aVertexMorph + (1.0-blendAmount)*aVertexPosition;
-		vec2 gradBlended = blendAmount*aVertexGradientMorph + (1.0-blendAmount)*aVertexGradient;
-		
-		
-		vec4 transformedCoord = uMVMatrix * vec4(vertexBlended,1.0);	//todo use 4x3 mat?
-		gl_Position = uPMatrix * transformedCoord;	
-		
-		vPos = vertexBlended.xy;
-		vGrad = 1024.0*gradBlended;	//should be muiltiplied by grid squares per unit.
-
-		float amountTexB = smoothstep (-0.01, 0.01, vertexBlended.z);
-		vTexBlend = vec2(1.0-amountTexB, amountTexB);
-	}
-</script>
-
-<script id="shader-simple-fs" type="x-shader/x-fragment">
-	precision mediump float;
-	varying vec2 vPos;
-	varying vec2 vGrad;
-
-	void main(void){
-		//gl_FragColor=vec4(vec3(10.0*vColor.z + 0.1),1.0);
-
-		vec3 norm = normalize(vec3(vGrad, 1.0));
-		vec3 color= 0.5*(vec3(1.0) + norm);
-
-		gl_FragColor=vec4(color, 1.0);
-	}
-</script>
-
-<script id="shader-textured-fs" type="x-shader/x-fragment">
-	#define TEX_DOWNSCALE 4.0
-
-	precision mediump float;
-
-	uniform sampler2D uSampler;
-	uniform sampler2D uSamplerB;
-	uniform sampler2D uSamplerNormals;
-	varying vec2 vPos;
-	varying vec2 vGrad;
-	varying vec2 vTexBlend;
-
-	void main(void){
-		//gl_FragColor=vec4(vec3(10.0*vColor.z + 0.1),1.0);
-
-		vec2 samplePos = vec2(vPos.x, 1.0-vPos.y);
-			//note only using 1.0-... so consistent with uGrad vertex shader gradient. TODO simplify
-
-		vec4 normalMapSample = texture2D(uSamplerNormals, samplePos);	
-
-		vec2 texCoord = vPos * vec2(TEX_DOWNSCALE);
-		vec4 texColor = texture2D(uSampler, texCoord);
-		vec4 texColorB = texture2D(uSamplerB, texCoord);
-		vec4 texColorBlend = vTexBlend.x * texColor + vTexBlend.y * texColorB;
-
-		vec3 norm = normalize( normalMapSample.yxz - vec3(0.5));
-		norm.y= -norm.y;
-			//note only using so consistent with uGrad vertex shader gradient. TODO simplify
-
-		//float lighting = dot(norm, vec3(0.0,0.0,1.0));
-		vec3 directionToSun = vec3(0.0,0.7,0.7);
-		float lighting = max( dot(norm, directionToSun), 0.0 );
-		float postGammaLighting = pow(lighting, 0.455);
-
-		gl_FragColor= texColorBlend * vec4(vec3(postGammaLighting), 1.0);
-	}
-</script>
-
-
-
 </head>
-<body>
 
+<body>
 
 <div id="container">
 	<canvas class="canvas" id="mycanvas"></canvas>
@@ -188,10 +58,12 @@
 <script type="text/javascript" src="lib/gl-matrix-min.js"></script>
 <script type="text/javascript" src="utils/webgl_utils.js"></script>
 <script type="text/javascript" src='utils/keys.js'></script>
+<script type="text/javascript" src='utils/shader_loader.js'></script>
 <script type="text/javascript" src="utils/downsize_mapping.js"></script>
 <script type="text/javascript" src="utils/terrain_utils.js"></script>
 <script type="text/javascript" src="utils/quadtree_util.js"></script>
 <script type="text/javascript" src="utils/texture_util.js"></script>
 <script type="text/javascript" src="js/main.js"></script>
 
+</body>
 </html>

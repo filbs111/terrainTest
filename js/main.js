@@ -261,8 +261,6 @@ var canvas = document.getElementById("myglcanvas");
 canvas.width = 800;
 canvas.height = 600;
 
-//TODO 
-//create buffers, shaders, initialise gl etc etc...
 
 var switchShader= (function(){
 	var currentShader;
@@ -272,6 +270,7 @@ var switchShader= (function(){
 		}
 		currentShader = shader;
 		gl.useProgram(shader);
+		enableDisableAttributes(shader);
 		prepBuffersForDrawing(terrainBuffer, shader);
 
 		bind2dTextureIfRequired(texture);
@@ -293,7 +292,7 @@ function init(){
 	gl.clearColor.apply(gl,[0,1,0,1]);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	initShaders();
+	initShaders(shaderProgs);initShaders=null;
 	texture = makeTexture("img/1.png",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);
 	textureB = makeTexture("img/3.png",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);
 	textureNormals = makeTexture("img/normals1024.png",gl.RGB,gl.UNSIGNED_SHORT_5_6_5);	//TODO format better suited for normal maps
@@ -306,8 +305,6 @@ function init(){
 	mat4.perspective(60, gl.viewportWidth/gl.viewportHeight, 0.01,10.0,pMatrix);	//apparently 0.9.5, last param is matrix rather than 1st!! todo use newer???
 																	//also old one uses degs!
 	
-	switchShader(shaderPrograms.simple);
-	
     gl.enable(gl.DEPTH_TEST);
 	gl.enable(gl.CULL_FACE);
 
@@ -319,20 +316,17 @@ function init(){
 	overlayctx = overlaycanvas.getContext("2d");
 	canvasDrawBlockFunc = getCanvasDrawBlockFunc(overlayctx);
 
-	requestAnimationFrame(drawScene);
+	getLocationsForShadersUsingPromises(
+		()=>{
+			console.log("got shader locations. requesting animation frame.");
+			switchShader(shaderProgs.simple);
+			requestAnimationFrame(drawScene);	//in callback because need to wait until shaders loaded
+		}
+    );
 }
 
-var shaderPrograms={};
-function initShaders(){
-	shaderPrograms.simple = loadShader( "shader-simple-vs", "shader-textured-fs",{
-		attributes:["aVertexPosition", "aVertexGradient"],
-		uniforms:["uMVMatrix","uPMatrix","uSampler","uSamplerB","uSamplerNormals"]
-		});
-	shaderPrograms.morph = loadShader( "shader-morph-vs", "shader-textured-fs",{
-		attributes:["aVertexPosition", "aVertexMorph", "aVertexGradient", "aVertexGradientMorph"],
-		uniforms:["uMVMatrix","uPMatrix","uSampler","uSamplerB","uSamplerNormals","uCentrePos","uMorphScale"]
-		});
-}
+var shaderProgs={};
+
 var terrainBuffer={};
 function initBuffers(sourceData){
 	var bufferObj = terrainBuffer;
@@ -447,10 +441,10 @@ function drawTerrain(){
 
 	var rendertype = document.getElementById("rendertype").value;
 
-	// drawObjectFromPreppedBuffers(terrainBuffer, shaderPrograms.simple);
+	// drawObjectFromPreppedBuffers(terrainBuffer, shaderProgs.simple);
 
 	
-	var shaderProg = (rendertype=="bruteforcenomorph") ? shaderPrograms.simple: shaderPrograms.morph;
+	var shaderProg = (rendertype=="bruteforcenomorph") ? shaderProgs.simple: shaderProgs.morph;
 	switchShader(shaderProg);
 
 	if (shaderProg.uniforms.uCentrePos){
@@ -584,6 +578,28 @@ var drawDebugResults;
 function prepBuffersForDrawing(bufferObj, shaderProg){
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferObj.vertexIndexBuffer);
 }
+
+var enableDisableAttributes = (function generateEnableDisableAttributesFunc(){
+	var numEnabled = 0;
+	
+	return function(shaderProg){
+		
+		var numToBeEnabled = shaderProg.numActiveAttribs;
+		if (numToBeEnabled>numEnabled){
+			for (var ii=numEnabled;ii<numToBeEnabled;ii++){
+				gl.enableVertexAttribArray(ii);
+			}
+		}
+		if (numToBeEnabled<numEnabled){
+			for (var ii=numToBeEnabled;ii<numEnabled;ii++){
+				gl.disableVertexAttribArray(ii);
+			}
+		}
+		numEnabled = numToBeEnabled;
+	};
+})();
+
+
 
 
 var mvMatrix = mat4.create();
