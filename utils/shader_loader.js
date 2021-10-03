@@ -105,6 +105,7 @@ function initShaders(shaderProgs){
 	var shaderProgNoVariationsList = {
 		simple:["shader-simple-vs", "shader-textured-fs"],
 		morph:["shader-morph-vs", "shader-textured-fs"],
+		morph_wrap:["shader-morph-vs", "shader-textured-fs",["DO_WRAP"]],
 	};
 
 	Object.entries(shaderProgNoVariationsList).forEach(([key,value])=>{

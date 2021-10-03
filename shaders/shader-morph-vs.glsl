@@ -15,10 +15,17 @@ varying vec2 vTexBlend;
 
 void main(void) {
 
-    vec2 absDist = abs(aVertexPosition.xy - uCentrePos);
 
     //Chebyshev distance
+#ifdef DO_WRAP
+    vec2 displacement = aVertexPosition.xy - uCentrePos;
+    vec2 moddedDist = vec2(-0.5)+mod( displacement +vec2(0.5) ,1.0);
+    vec2 absDist = abs(moddedDist);
+#else
+    vec2 absDist = abs(aVertexPosition.xy - uCentrePos);
+#endif
     float distFromCentre = max(absDist.x, absDist.y);
+
     //float transitionRange = 128.0*uMorphScale;
     //float transitionRangeB = 96.0*uMorphScale;	//lowest possible, for 
     //float transitionWidth = 32.0*uMorphScale;	//greatest possible transition width

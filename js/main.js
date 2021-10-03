@@ -435,7 +435,8 @@ function drawTerrain(){
 	// drawObjectFromPreppedBuffers(terrainBuffer, shaderProgs.simple);
 
 	
-	var shaderProg = (rendertype=="bruteforcenomorph") ? shaderProgs.simple: shaderProgs.morph;
+	var shaderProg = (rendertype=="bruteforcenomorph") ? shaderProgs.simple: 
+		(useWrapShader) ? shaderProgs.morph_wrap : shaderProgs.morph;
 	switchShader(shaderProg);
 
 	if (shaderProg.uniforms.uCentrePos){
