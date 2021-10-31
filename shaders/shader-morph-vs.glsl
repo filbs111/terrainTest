@@ -13,6 +13,8 @@ varying vec2 vPos;
 varying vec2 vGrad;
 varying vec2 vTexBlend;
 
+varying vec4 vDebugColor;
+
 void main(void) {
 
 
@@ -32,6 +34,8 @@ void main(void) {
 
     float transitionRangeB = 112.0*uMorphScale;	//push transition out further
     float transitionWidth = 16.0*uMorphScale;
+
+
 
     float morphContinuous = clamp((distFromCentre - transitionRangeB)/ transitionWidth , 0.0, 1.0);
 
@@ -53,4 +57,6 @@ void main(void) {
 
     float amountTexB = smoothstep (-0.01, 0.01, vertexBlended.z);
     vTexBlend = vec2(1.0-amountTexB, amountTexB);
+
+    vDebugColor = vec4(vec3(1.0-0.5*blendAmount), 1.0);
 }

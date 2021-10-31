@@ -9,6 +9,8 @@ varying vec2 vPos;
 varying vec2 vGrad;
 varying vec2 vTexBlend;
 
+varying vec4 vDebugColor;
+
 void main(void){
     //gl_FragColor=vec4(vec3(10.0*vColor.z + 0.1),1.0);
 
@@ -33,5 +35,5 @@ void main(void){
 
     float postGammaLighting = pow(lighting, 0.455);
 
-    gl_FragColor= texColorBlend * vec4(vec3(postGammaLighting), 1.0);
+    gl_FragColor= texColorBlend * vDebugColor * vec4(vec3(postGammaLighting), 1.0);
 }
