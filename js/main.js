@@ -442,6 +442,8 @@ function drawScene(frameTime){
 
 var moveVel={x:1,y:1};
 
+var useWrapShader = true;	//determines wheteher shader wraps distance. toggle by console.
+
 function drawTerrain(){
 	
 	if (!terrainBuffer.isInitialised){return;}
