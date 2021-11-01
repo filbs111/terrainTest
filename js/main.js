@@ -370,14 +370,34 @@ function drawScene(frameTime){
     var dotHalfSize = 5;
 	var viewpointPos = scene.getPos();
     overlayctx.fillRect(viewpointPos.x - dotHalfSize, viewpointPos.y - dotHalfSize, 2*dotHalfSize, 2*dotHalfSize);
-    drawCentredSquare(viewpointPos.x, viewpointPos.y, MIN_SIZE*(MULTIPLIER*2-1));
-        //covers 2 quadtree levels. more detailed level must be morphed to less detailed
-    drawCentredSquare(viewpointPos.x, viewpointPos.y, MIN_SIZE*(MULTIPLIER*2+1));
-        //guaranteed to be some quadtree level. within this range, should transfer gradually to less detailed level
-    drawCentredSquare(viewpointPos.x, viewpointPos.y, 2*MIN_SIZE*(MULTIPLIER*2-1));
-        //...
-    drawCentredSquare(viewpointPos.x, viewpointPos.y, 2*MIN_SIZE*(MULTIPLIER*2+1));
-    drawCentredSquare(viewpointPos.x, viewpointPos.y, 4*MIN_SIZE*(MULTIPLIER*2-1));
+
+	for (var ii=0, mult=1;ii<3;ii++, mult*=2){
+		drawCentredSquare(viewpointPos.x, viewpointPos.y, mult*MIN_SIZE*(MULTIPLIER*2-1));
+			//covers 2 quadtree levels. more detailed level must be morphed to less detailed
+		drawCentredSquare(viewpointPos.x, viewpointPos.y,  mult*MIN_SIZE*(MULTIPLIER*2+1));
+			//guaranteed to be some quadtree level. within this range, should transfer gradually to less detailed level
+	}
+
+	//for compound distance?
+	overlayctx.strokeStyle = "#0F0";
+
+	var zDistSq = viewpointPos.z*viewpointPos.z;
+	for (var ii=0, mult=1;ii<3;ii++, mult*=2){
+		var size = mult*MIN_SIZE*(MULTIPLIER*2-1);
+		
+		var squareDifference = size*size - 0.75*zDistSq;	//0.75 found by guesswork
+		if (squareDifference>0){
+			drawCentredSquare(viewpointPos.x, viewpointPos.y, Math.sqrt(squareDifference));
+		}
+		size = mult*MIN_SIZE*(MULTIPLIER*2+1);
+		squareDifference = size*size - 1.25*zDistSq;
+		if (squareDifference>0){
+			drawCentredSquare(viewpointPos.x, viewpointPos.y, Math.sqrt(squareDifference));
+		}
+
+	}
+
+	
 
 	function drawCentredSquare(x,y,size){
 		overlayctx.strokeRect(x - size, y - size, 2*size, 2*size);
