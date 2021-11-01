@@ -7,7 +7,7 @@ attribute vec2 aVertexGradientMorph;
 //attribute vec3 aVertexNormal;
 uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
-uniform vec2 uCentrePos;
+uniform vec3 uCentrePos;
 uniform float uMorphScale;
 varying vec2 vPos;
 varying vec2 vGrad;
@@ -18,15 +18,22 @@ varying vec4 vDebugColor;
 void main(void) {
 
 
-    //Chebyshev distance
+//2d Chebyshev distance
 #ifdef DO_WRAP
-    vec2 displacement = aVertexPosition.xy - uCentrePos;
+    vec2 displacement = aVertexPosition.xy - uCentrePos.xy;
     vec2 moddedDist = vec2(-0.5)+mod( displacement +vec2(0.5) ,1.0);
     vec2 absDist = abs(moddedDist);
 #else
-    vec2 absDist = abs(aVertexPosition.xy - uCentrePos);
+    vec2 absDist = abs(aVertexPosition.xy - uCentrePos.xy);
 #endif
+
+//compound = length(2d chby dist, z distance)
+#ifdef IS_COMPOUND
+    float distFromCentre = length(vec2(max(absDist.x, absDist.y), uCentrePos.z));
+#else
     float distFromCentre = max(absDist.x, absDist.y);
+#endif
+    
 
     //float transitionRange = 128.0*uMorphScale;
     //float transitionRangeB = 96.0*uMorphScale;	//lowest possible, for 

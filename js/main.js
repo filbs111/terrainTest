@@ -1,4 +1,4 @@
-var centrePos = [0.5,0.5];
+var centrePos = [0.5,0.5,0];
 
 //quadtree stuff
 var scene = (
@@ -27,7 +27,7 @@ var scene = (
 			viewpointPos.x = xx;
 			viewpointPos.y = yy;
 			viewpointPos.z = zz;
-			centrePos = [viewpointPos.x/terrainSize, viewpointPos.y/terrainSize];
+			centrePos = [viewpointPos.x/terrainSize, viewpointPos.y/terrainSize, viewpointPos.z/terrainSize];
             quadtree = calculateQuadtree(viewpointPos, {xpos:0, ypos:0, size:terrainSize});
 
 			//generate list of strips for drawing (combined blocks)
@@ -459,10 +459,18 @@ function drawTerrain(){
 	
 	var shaderProg = (rendertype=="bruteforcenomorph") ? shaderProgs.simple: 
 		(useWrapShader) ? shaderProgs.morph_wrap : shaderProgs.morph;
+
+	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["compound-distance"]){
+		shaderProg = shaderProgs.morph_compound;
+	}
+	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["compound-wrap"]){
+		shaderProg = shaderProgs.morph_compound_wrap;
+	}
+
 	switchShader(shaderProg);
 
 	if (shaderProg.uniforms.uCentrePos){
-		gl.uniform2fv(shaderProg.uniforms.uCentrePos, centrePos);
+		gl.uniform3fv(shaderProg.uniforms.uCentrePos, centrePos);
 	}
 	gl.uniformMatrix4fv(shaderProg.uniforms.uPMatrix, false, pMatrix);
 	gl.uniformMatrix4fv(shaderProg.uniforms.uMVMatrix, false, mvMatrix);
