@@ -5,10 +5,12 @@ const MULTIPLIER = 2.5;
 
 var quadtreeShouldSplitFuncs = {
     "chebyshev": function shouldSplitChebyshevDistance(x,y,z,size){
-        return Math.max(Math.abs(x), Math.abs(y), Math.abs(z)) < MULTIPLIER*size;
+        // return Math.max(Math.abs(x), Math.abs(y), Math.abs(z)) < MULTIPLIER*size;
+        return Math.max(Math.abs(x), Math.abs(y)) < MULTIPLIER*size;
     },
     "chebyshev-wrap": function shouldSplitChebyshevWrap(x,y,z,size){    //TODO when using this, adapt morph shader
-        return Math.max(Math.abs((Math.abs(x)+512)%1024 -512), Math.abs((((Math.abs(y)+512)%1024) - 512) ), Math.abs(z)) < MULTIPLIER*size;
+        // return Math.max(Math.abs((Math.abs(x)+512)%1024 -512), Math.abs((((Math.abs(y)+512)%1024) - 512) ), Math.abs(z)) < MULTIPLIER*size;
+        return Math.max(Math.abs((Math.abs(x)+512)%1024 -512), Math.abs((((Math.abs(y)+512)%1024) - 512) )) < MULTIPLIER*size;
     },
     "effective-a": function shouldSplitDuocylinderEffectiveDistance(x,y,z,size){ //ie distance in flat space where would appear at same size
         //TODO when using this, adjust morph shader and shapes displayed on minimap.
