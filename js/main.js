@@ -381,9 +381,11 @@ function drawScene(frameTime){
 		}
 	}
 
+	var zDistSq = viewpointPos.z*viewpointPos.z;
+
 	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["compound-distance"] || 
 		quadtreeSplitFunc == quadtreeShouldSplitFuncs["compound-wrap"] ){
-		var zDistSq = viewpointPos.z*viewpointPos.z;
+		
 		for (var ii=0, mult=1;ii<3;ii++, mult*=2){
 			var size = mult*MIN_SIZE*(MULTIPLIER*2-1);
 			
@@ -409,6 +411,30 @@ function drawScene(frameTime){
 			var size = mult*MIN_SIZE;
 
 			squareDifference = 4*size*size*6.25;
+			//try getting simple 2d (no height) right first
+			if (squareDifference>0){
+				var radius = Math.sqrt(squareDifference) - Math.sqrt(2)*size;
+				if (radius>0){
+					overlayctx.beginPath();
+					overlayctx.arc(viewpointPos.x, viewpointPos.y, radius, 0, 2*Math.PI );
+					overlayctx.stroke();
+				}
+				var radius = Math.sqrt(squareDifference) + Math.sqrt(2)*size;
+				overlayctx.beginPath();
+				overlayctx.arc(viewpointPos.x, viewpointPos.y, radius, 0, 2*Math.PI );
+				overlayctx.stroke();
+			}
+		}
+	}
+
+	//limiting radius value for centre of grid square found for sqrt ( d*d - z*z)
+	//where d is limiting split distance.
+	//extend this radius by half square diagonal
+	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["3d-distance"]){
+		for (var ii=0, mult=1;ii<3;ii++, mult*=2){
+			var size = mult*MIN_SIZE;
+
+			squareDifference = 4*size*size*6.25 - zDistSq;
 			//try getting simple 2d (no height) right first
 			if (squareDifference>0){
 				var radius = Math.sqrt(squareDifference) - Math.sqrt(2)*size;
