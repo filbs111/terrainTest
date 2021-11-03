@@ -95,9 +95,11 @@ var quadtreeShouldSplitFuncs = {
         //could speed up by square both sides
         return 250 * Math.sqrt(squaredDist) < MULTIPLIER*size;
     },
-    "3d-distance": function shouldSplit3dDistance(x,y,z,size){
-        // return Math.sqrt(x*x + y*y + z*z) < MULTIPLIER*size;    //note could square both sides
+    "2d-distance": function shouldSplit3dDistance(x,y,z,size){
         return Math.sqrt(x*x + y*y) < MULTIPLIER*size;    //note could square both sides
+    },
+    "3d-distance": function shouldSplit3dDistance(x,y,z,size){
+        return Math.sqrt(x*x + y*y + z*z) < MULTIPLIER*size;    //note could square both sides
     },
     "compound-distance": function shouldCompoundDistance(x,y,z,size){
         var chebyXY = Math.max(Math.abs(x), Math.abs(y));

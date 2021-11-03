@@ -365,63 +365,65 @@ function drawScene(frameTime){
 	renderQuadtree(scene.getQuadtree(), canvasDrawBlockFunc);
 
 	//draw point, ranges
-	overlayctx.fillStyle = "#F00";
-    overlayctx.strokeStyle = "#F00";
+	overlayctx.fillStyle = "#00F";
+    overlayctx.strokeStyle = "#00F";
     var dotHalfSize = 5;
 	var viewpointPos = scene.getPos();
     overlayctx.fillRect(viewpointPos.x - dotHalfSize, viewpointPos.y - dotHalfSize, 2*dotHalfSize, 2*dotHalfSize);
 
-	for (var ii=0, mult=1;ii<3;ii++, mult*=2){
-		drawCentredSquare(viewpointPos.x, viewpointPos.y, mult*MIN_SIZE*(MULTIPLIER*2-1));
-			//covers 2 quadtree levels. more detailed level must be morphed to less detailed
-		drawCentredSquare(viewpointPos.x, viewpointPos.y,  mult*MIN_SIZE*(MULTIPLIER*2+1));
-			//guaranteed to be some quadtree level. within this range, should transfer gradually to less detailed level
+	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["chebyshev"] || 
+		quadtreeSplitFunc == quadtreeShouldSplitFuncs["chebyshev-wrap"] ){
+		for (var ii=0, mult=1;ii<3;ii++, mult*=2){
+			drawCentredSquare(viewpointPos.x, viewpointPos.y, mult*MIN_SIZE*(MULTIPLIER*2-1));
+				//covers 2 quadtree levels. more detailed level must be morphed to less detailed
+			drawCentredSquare(viewpointPos.x, viewpointPos.y,  mult*MIN_SIZE*(MULTIPLIER*2+1));
+				//guaranteed to be some quadtree level. within this range, should transfer gradually to less detailed level
+		}
 	}
 
-	//for compound distance?
-	overlayctx.strokeStyle = "#0F0";
-
-	var zDistSq = viewpointPos.z*viewpointPos.z;
-	for (var ii=0, mult=1;ii<3;ii++, mult*=2){
-		var size = mult*MIN_SIZE*(MULTIPLIER*2-1);
-		
-		var squareDifference = size*size - 0.75*zDistSq;	//0.75 found by guesswork
-		if (squareDifference>0){
-			drawCentredSquare(viewpointPos.x, viewpointPos.y, Math.sqrt(squareDifference));
+	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["compound-distance"] || 
+		quadtreeSplitFunc == quadtreeShouldSplitFuncs["compound-wrap"] ){
+		var zDistSq = viewpointPos.z*viewpointPos.z;
+		for (var ii=0, mult=1;ii<3;ii++, mult*=2){
+			var size = mult*MIN_SIZE*(MULTIPLIER*2-1);
+			
+			var squareDifference = size*size - 0.75*zDistSq;	//0.75 found by guesswork
+			if (squareDifference>0){
+				drawCentredSquare(viewpointPos.x, viewpointPos.y, Math.sqrt(squareDifference));
+			}
+			size = mult*MIN_SIZE*(MULTIPLIER*2+1);
+			squareDifference = size*size - 1.25*zDistSq;
+			if (squareDifference>0){
+				drawCentredSquare(viewpointPos.x, viewpointPos.y, Math.sqrt(squareDifference));
+			}
 		}
-		size = mult*MIN_SIZE*(MULTIPLIER*2+1);
-		squareDifference = size*size - 1.25*zDistSq;
-		if (squareDifference>0){
-			drawCentredSquare(viewpointPos.x, viewpointPos.y, Math.sqrt(squareDifference));
-		}
-
 	}
 
 	//for 2d pythagorean distance.
 	//note that squared distance to centres of squares is below some limiting value
 	//therefore max distance to a corner of a square is this half square diagonal
 	//this is acheived for diagonal distance. really locus is not a circle - is minkowski sum of circle and square.
-	overlayctx.strokeStyle = "#00F";
-	
-	for (var ii=0, mult=1;ii<3;ii++, mult*=2){
-		var size = mult*MIN_SIZE;
+	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["2d-distance"]){
+		
+		for (var ii=0, mult=1;ii<3;ii++, mult*=2){
+			var size = mult*MIN_SIZE;
 
-		squareDifference = 4*size*size*6.25;
-		//try getting simple 2d (no height) right first
-		if (squareDifference>0){
-			var radius = Math.sqrt(squareDifference) - Math.sqrt(2)*size;
-			if (radius>0){
+			squareDifference = 4*size*size*6.25;
+			//try getting simple 2d (no height) right first
+			if (squareDifference>0){
+				var radius = Math.sqrt(squareDifference) - Math.sqrt(2)*size;
+				if (radius>0){
+					overlayctx.beginPath();
+					overlayctx.arc(viewpointPos.x, viewpointPos.y, radius, 0, 2*Math.PI );
+					overlayctx.stroke();
+				}
+				var radius = Math.sqrt(squareDifference) + Math.sqrt(2)*size;
 				overlayctx.beginPath();
 				overlayctx.arc(viewpointPos.x, viewpointPos.y, radius, 0, 2*Math.PI );
 				overlayctx.stroke();
 			}
-			var radius = Math.sqrt(squareDifference) + Math.sqrt(2)*size;
-			overlayctx.beginPath();
-			overlayctx.arc(viewpointPos.x, viewpointPos.y, radius, 0, 2*Math.PI );
-			overlayctx.stroke();
 		}
 	}
-
 
 	function drawCentredSquare(x,y,size){
 		overlayctx.strokeRect(x - size, y - size, 2*size, 2*size);
