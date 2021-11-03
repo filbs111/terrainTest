@@ -397,7 +397,31 @@ function drawScene(frameTime){
 
 	}
 
+	//for 2d pythagorean distance.
+	//note that squared distance to centres of squares is below some limiting value
+	//therefore max distance to a corner of a square is this half square diagonal
+	//this is acheived for diagonal distance. really locus is not a circle - is minkowski sum of circle and square.
+	overlayctx.strokeStyle = "#00F";
 	
+	for (var ii=0, mult=1;ii<3;ii++, mult*=2){
+		var size = mult*MIN_SIZE;
+
+		squareDifference = 4*size*size*6.25;
+		//try getting simple 2d (no height) right first
+		if (squareDifference>0){
+			var radius = Math.sqrt(squareDifference) - Math.sqrt(2)*size;
+			if (radius>0){
+				overlayctx.beginPath();
+				overlayctx.arc(viewpointPos.x, viewpointPos.y, radius, 0, 2*Math.PI );
+				overlayctx.stroke();
+			}
+			var radius = Math.sqrt(squareDifference) + Math.sqrt(2)*size;
+			overlayctx.beginPath();
+			overlayctx.arc(viewpointPos.x, viewpointPos.y, radius, 0, 2*Math.PI );
+			overlayctx.stroke();
+		}
+	}
+
 
 	function drawCentredSquare(x,y,size){
 		overlayctx.strokeRect(x - size, y - size, 2*size, 2*size);
