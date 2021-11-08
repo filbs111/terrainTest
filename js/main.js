@@ -521,6 +521,9 @@ function drawTerrain(){
 	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["2d-distance"]){
 		shaderProg = shaderProgs.morph_2d_distance;
 	}
+	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["3d-distance"]){
+		shaderProg = shaderProgs.morph_3d_distance;
+	}
 
 
 	switchShader(shaderProg);

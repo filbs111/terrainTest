@@ -19,11 +19,20 @@ void main(void) {
 
 
 #ifdef IS_PYTHAGORAS
+
+#ifdef IS_3D
+    float distFromCentre = length(vec3(aVertexPosition.xy, 0.0) - uCentrePos);
+
+    float distzoverscale = uCentrePos.z/(uMorphScale*32.0);    //TODO some multiplier to find scale from uMorphScale
+    float dsq = distzoverscale*distzoverscale;
+    float distFromCentreDivisor = sqrt ( pow(sqrt(25.0 - dsq) - sqrt(2.0), 2.0) + dsq );
+        //not efficient to calculate per vertex! could pass in as uniform
+    distFromCentre*= 4.0/distFromCentreDivisor;
+
+#else
     float distFromCentre = length(aVertexPosition.xy - uCentrePos.xy);
-
-    //distFromCentre*= (5.0+sqrt(2.0))/6.0;
-
-        distFromCentre*= 4.0/(5.0-sqrt(2.0));
+    distFromCentre*= 4.0/(5.0-sqrt(2.0));
+#endif
 
 
 #else
