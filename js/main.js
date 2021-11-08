@@ -410,7 +410,7 @@ function drawScene(frameTime){
 		for (var ii=0, mult=1;ii<3;ii++, mult*=2){
 			var size = mult*MIN_SIZE;
 
-			squareDifference = 4*size*size*6.25;
+			squareDifference = 4*size*size*MULTIPLIER*MULTIPLIER;
 			//try getting simple 2d (no height) right first
 			if (squareDifference>0){
 				var radius = Math.sqrt(squareDifference) - Math.sqrt(2)*size;
@@ -434,7 +434,7 @@ function drawScene(frameTime){
 		for (var ii=0, mult=1;ii<3;ii++, mult*=2){
 			var size = mult*MIN_SIZE;
 
-			squareDifference = 4*size*size*6.25 - zDistSq;
+			squareDifference = 4*size*size*MULTIPLIER*MULTIPLIER - zDistSq;
 			//try getting simple 2d (no height) right first
 			if (squareDifference>0){
 				var radius = Math.sqrt(squareDifference) - Math.sqrt(2)*size;
