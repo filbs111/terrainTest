@@ -518,6 +518,10 @@ function drawTerrain(){
 	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["compound-wrap"]){
 		shaderProg = shaderProgs.morph_compound_wrap;
 	}
+	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["2d-distance"]){
+		shaderProg = shaderProgs.morph_2d_distance;
+	}
+
 
 	switchShader(shaderProg);
 

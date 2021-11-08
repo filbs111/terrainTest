@@ -18,6 +18,15 @@ varying vec4 vDebugColor;
 void main(void) {
 
 
+#ifdef IS_PYTHAGORAS
+    float distFromCentre = length(aVertexPosition.xy - uCentrePos.xy);
+
+    //distFromCentre*= (5.0+sqrt(2.0))/6.0;
+
+        distFromCentre*= 4.0/(5.0-sqrt(2.0));
+
+
+#else
 //2d Chebyshev distance
 #ifdef DO_WRAP
     vec2 displacement = aVertexPosition.xy - uCentrePos.xy;
@@ -32,6 +41,8 @@ void main(void) {
     float distFromCentre = length(vec2(max(absDist.x, absDist.y), uCentrePos.z));
 #else
     float distFromCentre = max(absDist.x, absDist.y);
+#endif
+
 #endif
     
 
