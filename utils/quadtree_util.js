@@ -55,6 +55,18 @@ var quadtreeShouldSplitFuncs = {
         //could speed up by square both sides
         return 220 * Math.sqrt(effdistsq) < MULTIPLIER*size;
     },
+    "effective-4corners": function shouldSplitDuocylinderEffectiveDistance4Corners(x,y,z,size){
+        var halfSquareShift = size/2;
+            //note this is inefficient - each call recalculates some things
+            //also possible that some part of square meets the split criteria though no corners do.
+            //works as a proof of concept to check vs bounding shape on map
+        var shouldSplitFunc = quadtreeShouldSplitFuncs["effective-a"];
+        var corner1 = shouldSplitFunc(x-halfSquareShift,y-halfSquareShift,z,size);
+        var corner2 = shouldSplitFunc(x+halfSquareShift,y-halfSquareShift,z,size);
+        var corner3 = shouldSplitFunc(x-halfSquareShift,y+halfSquareShift,z,size);
+        var corner4 = shouldSplitFunc(x+halfSquareShift,y+halfSquareShift,z,size);
+        return corner1 || corner2 || corner3 || corner4;
+    },
     "a": function shouldSplitDuocylinder4DDistance(x,y,z,size){
         //todo include z in calculation (currently behaves as if z=0)
         var cosu = Math.cos(2*Math.PI * x/1024);

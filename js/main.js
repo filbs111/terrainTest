@@ -451,6 +451,49 @@ function drawScene(frameTime){
 		}
 	}
 
+	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["effective-4corners"]){
+
+		var z = viewpointPos.z;
+		var alpha = Math.PI/4 + z/500;
+        var cosa = Math.cos(alpha);
+        var sina = Math.sin(alpha);
+    
+        // var cosu = Math.cos(2*Math.PI * x/1024);
+        // var cosv = Math.cos(2*Math.PI * y/1024);
+    
+        // //note picked 326 ~ 1024/PI out of hat
+        // //could speed up by square both sides
+        // return 220 * Math.sqrt(1-0.5*(Math.pow( cosa*cosu + sina*cosv ,2))) < MULTIPLIER*size;
+
+		var size = terrainSize/16;	//?	loop over various values here.
+
+		var RHS = MULTIPLIER*size;
+		RHS/=220;
+		RHS*=RHS;	// = 1-0.5*(Math.pow( cosa*cosu + sina*cosv ,2))
+		RHS = Math.sqrt(2*(1-RHS));	//	cosa*cosu + sina*cosv
+		
+		var xshift = -viewpointPos.x;
+		var yshift = -viewpointPos.y;
+		for (var ii=0;ii<1023;ii++){
+			var cosu = Math.cos( ((ii + xshift)%1024) *2*Math.PI/1024);	//TODO shift by xpos
+			var cosacosu = cosa*cosu;
+
+			var sinacosv = RHS - cosacosu;
+
+			var cosv = sinacosv/sina;
+			var v = Math.acos(cosv);
+			//multiple solutions? 
+			v *= 1024 / (2*Math.PI);
+
+			var v2 = (v + 1024 - yshift)%1024;
+			overlayctx.fillRect(ii,v2,1,1);
+
+			v2 = ((2048 - v) - yshift)%1024;
+			overlayctx.fillRect(ii,v2,1,1);
+		}
+
+	}
+
 	function drawCentredSquare(x,y,size){
 		overlayctx.strokeRect(x - size, y - size, 2*size, 2*size);
 	}
