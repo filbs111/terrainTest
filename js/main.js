@@ -451,7 +451,7 @@ function drawScene(frameTime){
 		}
 	}
 
-	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["effective-4corners"]){
+	if ([quadtreeShouldSplitFuncs["effective-4corners"], quadtreeShouldSplitFuncs["effective-area"]].indexOf(quadtreeSplitFunc)!=-1){
 
 		var z = viewpointPos.z;
 		var alpha = Math.PI/4 + z/500;

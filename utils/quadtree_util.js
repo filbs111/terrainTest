@@ -67,6 +67,62 @@ var quadtreeShouldSplitFuncs = {
         var corner4 = shouldSplitFunc(x+halfSquareShift,y+halfSquareShift,z,size);
         return corner1 || corner2 || corner3 || corner4;
     },
+    "effective-area": function shouldSplitDuocylinderEffectiveDistanceArea(x,y,z,size){
+        //NOTE this may be inefficient!
+
+        //ensure x, y between -512, 512 ( below code assumes that )
+        x-=512;
+        y-=512;
+        x = x - 1024*(Math.floor(x/1024));
+        y = y - 1024*(Math.floor(y/1024));
+        x-=512;
+        y-=512;
+
+        var alpha = Math.PI/4 + z/500;
+        var cosa = Math.cos(alpha);
+        var sina = Math.sin(alpha);
+    
+        var halfSquareShift = size/2;
+        var xstart = x-halfSquareShift;
+        var xend = x+halfSquareShift;
+        var ystart = y-halfSquareShift;
+        var yend = y+halfSquareShift;
+
+        xstart = Math.abs(xstart);
+        xend = Math.abs(xend);
+        ystart = Math.abs(ystart);
+        yend = Math.abs(yend);
+
+        var cosumax = Math.cos(2*Math.PI * Math.min(xstart, xend)/1024);
+        var cosvmax = Math.cos(2*Math.PI * Math.min(ystart, yend)/1024);
+
+        var cosumin = Math.cos(2*Math.PI * Math.max(xstart, xend)/1024);
+        var cosvmin = Math.cos(2*Math.PI * Math.max(ystart, yend)/1024);
+
+        //TODO are these necessary? is similar needed for x,y ~ half grid size? , so cosine = -1?
+        if (Math.abs(x)<size/2){
+            cosumax=1;
+        }
+        if (Math.abs(y)<size/2){
+            cosvmax=1;
+        }
+
+        if (Math.abs(x)> (1024-size)/2){
+            cosumin=-1;
+        }
+        if (Math.abs(y)> (1024-size)/2){
+            cosvmin=-1;
+        }
+
+        //find which combo produces the largest square?
+        var square1 = Math.pow( cosa*cosumax +sina*cosvmax ,2);
+        var square2 = Math.pow( cosa*cosumax +sina*cosvmin ,2);
+        var square3 = Math.pow( cosa*cosumin +sina*cosvmax ,2);
+        var square4 = Math.pow( cosa*cosumin +sina*cosvmin ,2);
+        var best = Math.max(square1, square2, square3, square4);
+
+        return 220 * Math.sqrt(1-0.5*best) < MULTIPLIER*size;
+    },
     "a": function shouldSplitDuocylinder4DDistance(x,y,z,size){
         //todo include z in calculation (currently behaves as if z=0)
         var cosu = Math.cos(2*Math.PI * x/1024);
