@@ -364,132 +364,138 @@ function drawScene(frameTime){
 	overlayctx.strokeStyle = "#FFF";
 	renderQuadtree(scene.getQuadtree(), canvasDrawBlockFunc);
 
-	//draw point, ranges
-	overlayctx.fillStyle = "#00F";
-    overlayctx.strokeStyle = "#00F";
-    var dotHalfSize = 5;
-	var viewpointPos = scene.getPos();
-    overlayctx.fillRect(viewpointPos.x - dotHalfSize, viewpointPos.y - dotHalfSize, 2*dotHalfSize, 2*dotHalfSize);
 
-	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["chebyshev"] || 
-		quadtreeSplitFunc == quadtreeShouldSplitFuncs["chebyshev-wrap"] ){
-		for (var ii=0, mult=1;ii<3;ii++, mult*=2){
-			drawCentredSquare(viewpointPos.x, viewpointPos.y, mult*MIN_SIZE*(MULTIPLIER*2-1));
-				//covers 2 quadtree levels. more detailed level must be morphed to less detailed
-			drawCentredSquare(viewpointPos.x, viewpointPos.y,  mult*MIN_SIZE*(MULTIPLIER*2+1));
-				//guaranteed to be some quadtree level. within this range, should transfer gradually to less detailed level
+	if (!document.getElementById("skip-draw-shape").checked){
+
+		//draw point, ranges
+		overlayctx.fillStyle = "#00F";
+		overlayctx.strokeStyle = "#00F";
+		var dotHalfSize = 5;
+		var viewpointPos = scene.getPos();
+		overlayctx.fillRect(viewpointPos.x - dotHalfSize, viewpointPos.y - dotHalfSize, 2*dotHalfSize, 2*dotHalfSize);
+
+		if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["chebyshev"] || 
+			quadtreeSplitFunc == quadtreeShouldSplitFuncs["chebyshev-wrap"] ){
+			for (var ii=0, mult=1;ii<3;ii++, mult*=2){
+				drawCentredSquare(viewpointPos.x, viewpointPos.y, mult*MIN_SIZE*(MULTIPLIER*2-1));
+					//covers 2 quadtree levels. more detailed level must be morphed to less detailed
+				drawCentredSquare(viewpointPos.x, viewpointPos.y,  mult*MIN_SIZE*(MULTIPLIER*2+1));
+					//guaranteed to be some quadtree level. within this range, should transfer gradually to less detailed level
+					//since MULTIPLIER=2.5 , MULTIPLIER*2+/-1 = 6,4
+			}
 		}
-	}
 
-	var zDistSq = viewpointPos.z*viewpointPos.z;
+		var zDistSq = viewpointPos.z*viewpointPos.z;
 
-	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["compound-distance"] || 
-		quadtreeSplitFunc == quadtreeShouldSplitFuncs["compound-wrap"] ){
-		
-		for (var ii=0, mult=1;ii<3;ii++, mult*=2){
-			var size = mult*MIN_SIZE*(MULTIPLIER*2-1);
+		if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["compound-distance"] || 
+			quadtreeSplitFunc == quadtreeShouldSplitFuncs["compound-wrap"] ){
 			
-			var squareDifference = size*size - 0.75*zDistSq;	//0.75 found by guesswork
-			if (squareDifference>0){
-				drawCentredSquare(viewpointPos.x, viewpointPos.y, Math.sqrt(squareDifference));
-			}
-			size = mult*MIN_SIZE*(MULTIPLIER*2+1);
-			squareDifference = size*size - 1.25*zDistSq;
-			if (squareDifference>0){
-				drawCentredSquare(viewpointPos.x, viewpointPos.y, Math.sqrt(squareDifference));
+			for (var ii=0, mult=1;ii<3;ii++, mult*=2){
+				var size = mult*MIN_SIZE*(MULTIPLIER*2-1);
+				
+				var squareDifference = size*size - 0.75*zDistSq;	//0.75 found by guesswork
+				if (squareDifference>0){
+					drawCentredSquare(viewpointPos.x, viewpointPos.y, Math.sqrt(squareDifference));
+				}
+				size = mult*MIN_SIZE*(MULTIPLIER*2+1);
+				squareDifference = size*size - 1.25*zDistSq;
+				if (squareDifference>0){
+					drawCentredSquare(viewpointPos.x, viewpointPos.y, Math.sqrt(squareDifference));
+				}
 			}
 		}
-	}
 
-	//for 2d pythagorean distance.
-	//note that squared distance to centres of squares is below some limiting value
-	//therefore max distance to a corner of a square is this half square diagonal
-	//this is acheived for diagonal distance. really locus is not a circle - is minkowski sum of circle and square.
-	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["2d-distance"]){
-		
-		for (var ii=0, mult=1;ii<3;ii++, mult*=2){
-			var size = mult*MIN_SIZE;
+		//for 2d pythagorean distance.
+		//note that squared distance to centres of squares is below some limiting value
+		//therefore max distance to a corner of a square is this half square diagonal
+		//this is acheived for diagonal distance. really locus is not a circle - is minkowski sum of circle and square.
+		if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["2d-distance"]){
+			
+			for (var ii=0, mult=1;ii<3;ii++, mult*=2){
+				var size = mult*MIN_SIZE;
 
-			squareDifference = 4*size*size*MULTIPLIER*MULTIPLIER;
-			//try getting simple 2d (no height) right first
-			if (squareDifference>0){
-				var radius = Math.sqrt(squareDifference) - Math.sqrt(2)*size;
-				if (radius>0){
+				squareDifference = 4*size*size*MULTIPLIER*MULTIPLIER;
+				//try getting simple 2d (no height) right first
+				if (squareDifference>0){
+					var radius = Math.sqrt(squareDifference) - Math.sqrt(2)*size;
+					if (radius>0){
+						overlayctx.beginPath();
+						overlayctx.arc(viewpointPos.x, viewpointPos.y, radius, 0, 2*Math.PI );
+						overlayctx.stroke();
+					}
+					var radius = Math.sqrt(squareDifference) + Math.sqrt(2)*size;
 					overlayctx.beginPath();
 					overlayctx.arc(viewpointPos.x, viewpointPos.y, radius, 0, 2*Math.PI );
 					overlayctx.stroke();
 				}
-				var radius = Math.sqrt(squareDifference) + Math.sqrt(2)*size;
-				overlayctx.beginPath();
-				overlayctx.arc(viewpointPos.x, viewpointPos.y, radius, 0, 2*Math.PI );
-				overlayctx.stroke();
 			}
 		}
-	}
 
-	//limiting radius value for centre of grid square found for sqrt ( d*d - z*z)
-	//where d is limiting split distance.
-	//extend this radius by half square diagonal
-	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["3d-distance"]){
-		for (var ii=0, mult=1;ii<3;ii++, mult*=2){
-			var size = mult*MIN_SIZE;
+		//limiting radius value for centre of grid square found for sqrt ( d*d - z*z)
+		//where d is limiting split distance.
+		//extend this radius by half square diagonal
+		if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["3d-distance"]){
+			for (var ii=0, mult=1;ii<3;ii++, mult*=2){
+				var size = mult*MIN_SIZE;
 
-			squareDifference = 4*size*size*MULTIPLIER*MULTIPLIER - zDistSq;
-			//try getting simple 2d (no height) right first
-			if (squareDifference>0){
-				var radius = Math.sqrt(squareDifference) - Math.sqrt(2)*size;
-				if (radius>0){
+				squareDifference = 4*size*size*MULTIPLIER*MULTIPLIER - zDistSq;
+				//try getting simple 2d (no height) right first
+				if (squareDifference>0){
+					var radius = Math.sqrt(squareDifference) - Math.sqrt(2)*size;
+					if (radius>0){
+						overlayctx.beginPath();
+						overlayctx.arc(viewpointPos.x, viewpointPos.y, radius, 0, 2*Math.PI );
+						overlayctx.stroke();
+					}
+					var radius = Math.sqrt(squareDifference) + Math.sqrt(2)*size;
 					overlayctx.beginPath();
 					overlayctx.arc(viewpointPos.x, viewpointPos.y, radius, 0, 2*Math.PI );
 					overlayctx.stroke();
 				}
-				var radius = Math.sqrt(squareDifference) + Math.sqrt(2)*size;
-				overlayctx.beginPath();
-				overlayctx.arc(viewpointPos.x, viewpointPos.y, radius, 0, 2*Math.PI );
-				overlayctx.stroke();
 			}
 		}
-	}
 
-	if ([quadtreeShouldSplitFuncs["effective-4corners"], quadtreeShouldSplitFuncs["effective-area"]].indexOf(quadtreeSplitFunc)!=-1){
+		if ([quadtreeShouldSplitFuncs["effective-4corners"], quadtreeShouldSplitFuncs["effective-area"]].indexOf(quadtreeSplitFunc)!=-1){
 
-		var z = viewpointPos.z;
-		var alpha = Math.PI/4 + z/500;
-        var cosa = Math.cos(alpha);
-        var sina = Math.sin(alpha);
-    
-        // var cosu = Math.cos(2*Math.PI * x/1024);
-        // var cosv = Math.cos(2*Math.PI * y/1024);
-    
-        // //note picked 326 ~ 1024/PI out of hat
-        // //could speed up by square both sides
-        // return 220 * Math.sqrt(1-0.5*(Math.pow( cosa*cosu + sina*cosv ,2))) < MULTIPLIER*size;
-
-		var size = terrainSize/16;	//?	loop over various values here.
-
-		var RHS = MULTIPLIER*size;
-		RHS/=220;
-		RHS*=RHS;	// = 1-0.5*(Math.pow( cosa*cosu + sina*cosv ,2))
-		RHS = Math.sqrt(2*(1-RHS));	//	cosa*cosu + sina*cosv
+			var z = viewpointPos.z;
+			var alpha = Math.PI/4 + z/500;
+			var cosa = Math.cos(alpha);
+			var sina = Math.sin(alpha);
 		
-		var xshift = -viewpointPos.x;
-		var yshift = -viewpointPos.y;
-		for (var ii=0;ii<1023;ii++){
-			var cosu = Math.cos( ((ii + xshift)%1024) *2*Math.PI/1024);	//TODO shift by xpos
-			var cosacosu = cosa*cosu;
+			// var cosu = Math.cos(2*Math.PI * x/1024);
+			// var cosv = Math.cos(2*Math.PI * y/1024);
+		
+			// //note picked 326 ~ 1024/PI out of hat
+			// //could speed up by square both sides
+			// return 220 * Math.sqrt(1-0.5*(Math.pow( cosa*cosu + sina*cosv ,2))) < MULTIPLIER*size;
 
-			var sinacosv = RHS - cosacosu;
+			var size = terrainSize/16;	//?	loop over various values here.
 
-			var cosv = sinacosv/sina;
-			var v = Math.acos(cosv);
-			//multiple solutions? 
-			v *= 1024 / (2*Math.PI);
+			var RHS = MULTIPLIER*size;
+			RHS/=220;
+			RHS*=RHS;	// = 1-0.5*(Math.pow( cosa*cosu + sina*cosv ,2))
+			RHS = Math.sqrt(2*(1-RHS));	//	cosa*cosu + sina*cosv
+			
+			var xshift = -viewpointPos.x;
+			var yshift = -viewpointPos.y;
+			for (var ii=0;ii<1023;ii++){
+				var cosu = Math.cos( ((ii + xshift)%1024) *2*Math.PI/1024);	//TODO shift by xpos
+				var cosacosu = cosa*cosu;
 
-			var v2 = (v + 1024 - yshift)%1024;
-			overlayctx.fillRect(ii,v2,1,1);
+				var sinacosv = RHS - cosacosu;
 
-			v2 = ((2048 - v) - yshift)%1024;
-			overlayctx.fillRect(ii,v2,1,1);
+				var cosv = sinacosv/sina;
+				var v = Math.acos(cosv);
+				//multiple solutions? 
+				v *= 1024 / (2*Math.PI);
+
+				var v2 = (v + 1024 - yshift)%1024;
+				overlayctx.fillRect(ii,v2,1,1);
+
+				v2 = ((2048 - v) - yshift)%1024;
+				overlayctx.fillRect(ii,v2,1,1);
+			}
+
 		}
 
 	}
