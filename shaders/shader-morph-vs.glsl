@@ -1,4 +1,5 @@
 #define CONST_TAU 6.28318
+#define CONST_QPI 0.785398
 
 attribute vec3 aVertexPosition;
 attribute vec3 aVertexMorph;
@@ -17,6 +18,32 @@ varying vec4 vDebugColor;
 
 void main(void) {
 
+
+#ifdef IS_4D
+
+//TODO equation using 4D vertex positions directly? might come out neater
+
+    vec3 relativePos = vec3(aVertexPosition.xy,0.0) - uCentrePos;
+
+    //TODO work out where these fudge factors come from (converting from quadtree split func, where these are 1.0)
+    relativePos.z*=-1.0;  //??
+    float fudgeFixer = 1024.0;
+    float fudgeB = 0.8; //??
+
+    float alpha = CONST_QPI + fudgeFixer*relativePos.z/500.0;
+    float cosa = cos(alpha);
+    float sina = sin(alpha);
+    
+    float cosu = cos(CONST_TAU * relativePos.x)*fudgeFixer/1024.0;
+    float cosv = cos(CONST_TAU * relativePos.y)*fudgeFixer/1024.0;
+    
+    float sum = cosa*cosu + sina*cosv;
+
+    //note picked 326 ~ 1024/PI out of hat
+    //could speed up by square both sides
+    float distFromCentre = fudgeB* 220.0 * sqrt(1.0-0.5*sum*sum) / fudgeFixer;
+#else
+//3d
 
 #ifdef IS_PYTHAGORAS
 
@@ -51,6 +78,9 @@ void main(void) {
 #else
     float distFromCentre = max(absDist.x, absDist.y);
 #endif
+
+#endif
+
 
 #endif
     

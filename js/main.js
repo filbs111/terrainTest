@@ -573,6 +573,9 @@ function drawTerrain(){
 	if (quadtreeSplitFunc == quadtreeShouldSplitFuncs["3d-distance"]){
 		shaderProg = shaderProgs.morph_3d_distance;
 	}
+	if ([quadtreeShouldSplitFuncs["effective-4corners"], quadtreeShouldSplitFuncs["effective-area"]].indexOf(quadtreeSplitFunc)!=-1){
+		shaderProg = shaderProgs.morph_4d_eff;
+	}
 
 
 	switchShader(shaderProg);

@@ -109,7 +109,8 @@ function initShaders(shaderProgs){
 		morph_compound:["shader-morph-vs", "shader-textured-fs",["IS_COMPOUND"]],
 		morph_compound_wrap:["shader-morph-vs", "shader-textured-fs",["IS_COMPOUND","DO_WRAP"]],
 		morph_2d_distance:["shader-morph-vs", "shader-textured-fs",["IS_PYTHAGORAS"]],
-		morph_3d_distance:["shader-morph-vs", "shader-textured-fs",["IS_PYTHAGORAS","IS_3D"]],	//??
+		morph_3d_distance:["shader-morph-vs", "shader-textured-fs",["IS_PYTHAGORAS","IS_3D"]],
+		morph_4d_eff:["shader-morph-vs", "shader-textured-fs",["IS_4D"]],
 	};
 
 	Object.entries(shaderProgNoVariationsList).forEach(([key,value])=>{
